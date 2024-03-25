@@ -8,7 +8,7 @@ Descargar el gamemode UN Player Roleplay MySQL o actualiza tu gamemode UP a MySQ
 > <br>
 > <br>El servidor se encuentra con la version SA-MP 0.3.DL.
 > <br>
-> Plugins necesarios:
+> <br>Plugins necesarios:
 > <br>[Streamer 2.9.5](https://github.com/samp-incognito/samp-streamer-plugin/releases/tag/v2.9.5) (Ya Incluido).
 > <br>[MySQL R41-4](https://github.com/pBlueG/SA-MP-MySQL/releases/tag/R41-4) (Ya Incluido).
 > <br>[Audio](https://github.com/samp-incognito/samp-audio-server-plugin) (Ya Incluido).
