@@ -20,12 +20,13 @@ Si usted cuenta con el mismo gamemode y desea actualizarlo a MySQL [aquí]() enc
 
 > [!IMPORTANT]
 > Para configurar la base de datos solo es necesario abrir el archivo "mysql.ini" e ingresar los datos.
-> <br>En caso de usar contraseña borre '#' de '#password' o obtendra un error de conexion. Plugins necesarios:
+> <br>En caso de usar contraseña borre '#' de '#password' o obtendra un error de conexion.
+> <br>Plugins necesarios:
 > <br>[Streamer 2.9.5](https://github.com/samp-incognito/samp-streamer-plugin/releases/tag/v2.9.5) (Ya Incluido).
 > <br>[MySQL R41-4](https://github.com/pBlueG/SA-MP-MySQL/releases/tag/R41-4) (Ya Incluido).
 > <br>[Audio](https://github.com/samp-incognito/samp-audio-server-plugin) (Ya Incluido).
 
 > [!CAUTION]
 > Disclaimer
-> Creditos ©UN Player 2013-2022
-> El gamemode uasdo en cuestion fue tomado de [este video](https://www.youtube.com/watch?v=vv4rRZ2ptTA).
+> <br>Creditos ©UN Player 2013-2022
+> <br>El gamemode uasdo en cuestion fue tomado de [este video](https://www.youtube.com/watch?v=vv4rRZ2ptTA).
