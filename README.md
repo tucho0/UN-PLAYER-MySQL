@@ -9,10 +9,10 @@ Descargar el gamemode UN Player Roleplay MySQL o actualiza tu gamemode UP a MySQ
 
 ## Descarga
 
-• Para descargar el gamemode completo (Gamemode + Base de Datos ) [Click Aquí]().
-• Para descargar solo el gamemode [Click Aquí]().
-• Para descargar solo la base de datos [Click Aquí]().
-• Para descargar solo la base de datos [Click Aquí](). (Sin casas y negocios).
+- Para descargar el gamemode completo (Gamemode + Base de Datos ) [Click Aquí]().
+- Para descargar solo el gamemode [Click Aquí]().
+- Para descargar solo la base de datos [Click Aquí]().
+- Para descargar solo la base de datos [Click Aquí](). (Sin casas y negocios).
 
 ## Actualizacion
 
