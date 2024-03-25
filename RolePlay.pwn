@@ -1,25 +1,19 @@
-
-
-//   NEXT OBJECT
-
-
-//#pragma codepage "C:\8859-1.TXT"
 /// 				INCLUDES
 #include <a_samp>
-#include <a_http>
 #include <streamer>
+#include <a_mysql>
+#include <a_http>
 #include <audio>
 
 /// 				DEFINE
-#define LOGO_FONIXGAME						"{FFFFFF}Bienvenido a la comunidad de {141414}F{787878}onix{00FF1E} G{00FF6E}ame {0041FF}Role{0069FF}Play!"
-#define URL_WEB								"~W~www~G~.~B~Fonixgame.~W~foroactivo~G~.~W~com"
-#define URL_WEB_SHADOW						"~l~www.FonixGame.foroactivo.com"
+#define LOGO_UNPLAYER						"{FFFFFF}Bienvenido a la comunidad de {00A5FF}UN {2E6140}P{178527}layer{242F61}!"
+#define URL_WEB								"~w~www.~b~un~g~player~w~.com"
+#define URL_WEB_SHADOW						URL_WEB
+#define WEBPAGE 							"www.empty.com"
 #define	GAMEMODE_VERSION					"RolePlay | 0.3.7"
 #define PASSWORD_EMAIL                      "SetPassword"
-// {FF7800}www{0000FF}.{0F9500}{0FFF00}FonixGame.foroactivo{0000FF}.{FF7800}com
 
 #define COLOR_TITULO_DIALOGS				"006CAA"
-//#define TIME_ZONE                           2
 #define COLOR_TEXTO_DIALOGS					"F0F0F0"
 #define COLOR_CREMA							"E6E6E6"
 #define COLOR_AZUL							"00A5FF"
@@ -42,7 +36,7 @@
 #define COLOR_3DLABEL_PISTAS				0xFFC800FF
 #define COLOR_DM       						0xFF0055FF
 #define COLOR_DM_TEAM  						0x0087FFFF
-#define COLOR_OWNED_CHAT                    0x00EBFFFF
+#define COLOR_OWNED_CHAT                    0x2587CEFF
 #define COLOR_MENSAJES_DE_AVISOS 			0x8C8C8CFF
 #define COLOR_MALETERO_ARMARIO_CAJA_FUERTE  0xC3FF00FF
 #define	COLOR_KICK_JAIL_BAN                 0xFFBE00FF
@@ -66,8 +60,6 @@
 #define MAX_AGENDA_NAME                     20
 #define MAX_ROBOS_COUNT                     4
 #define INFINITY_HEALTH 					(Float:0x7F800000)
-//  #define MAX_PLAYER_SLOT                     78
-//	#define MAX_PLAYER_SLOT                     150
 #define MAX_FACCION_NAME       				30
 #define MAX_FACCION_COUNT      				25
 #define MAX_BUFFER_IP_ATTACK                500
@@ -234,6 +226,7 @@
 /////////////////// END DEFINES ///////////////////
 
 /// 				FORWARDS
+forward MySQLConnect();
 forward LoadLastOptionsServer(); // LOAD SPECIAL OPTION SERVER
 forward DataUserClean(playerid);
 forward DataUserLoad(playerid);
@@ -411,7 +404,7 @@ forward IsPlayerConnectedEx(playername[]);
 forward LoadJobs();
 forward LoadTextDrawInfo();
 forward SetStyleTextDrawTextDrawInfo(textdrawid, text[]);
-//forward IsCheatMoney(playerid, lastmoney);
+forward IsCheatMoney(playerid, lastmoney);
 forward CheckWeapondCheat(playerid);
 forward UpdateWeapon(playerid);
 forward GivePlayerWeaponEx(playerid, weaponid, ammo);
@@ -684,7 +677,6 @@ forward LoadCamerasLogin();
 forward IsAlarmaBug(vehicleid);
 forward SetCameraPresent(playerid, point, Float:Porcent, Float:CameraX, Float:CameraY, Float:CameraZ, min, max);
 forward RecoveryEmailPlayer(playerid, response_code, data[]);
-forward SaveEmail(playerid);
 forward IsValidEmail(playerid, email[]);
 forward ShowPlayerLogin(playerid, option);
 forward ShowPlayerRegister(playerid, option);
@@ -1259,7 +1251,6 @@ enum TypeGarageEnums
 }
 enum HouseEnums
 {
-	Empy_Bug,
 	Dueno[MAX_PLAYER_NAME],
 	ArmarioWeapon[7],
 	ArmarioAmmo[7],
@@ -1288,7 +1279,10 @@ enum HouseEnums
 	EcualizadorHouse[9],
 	StationID,
     GavetaObjects[MAX_GUANTERA_GAVETA_SLOTS],
-    GavetaLock
+    GavetaLock,
+    ArmarioData[500],
+    RefrigeradorData[200],
+    EcualizadorData[100]
 }
 enum HouseFriendsEnum
 {
@@ -1492,8 +1486,6 @@ enum DataUsers
 {
 	EmailTime,
 	Email[60],           // Email
-	Zero,           	// 0
-	Empy,           	// 1
 	Password[25],       // 2
 	AccountState,       // 3
 	Float:Spawn_X,  	// 4
@@ -1541,25 +1533,19 @@ enum DataUsers
 	IsPlayerInHouse,	// 46
 	TimeEquipo,			// 47
 	SpawnAmigo,			// 48
-	AmmoP,				// 49 ---------------------------- Empty
 	IsPaga,				// 50
 	MyIP[16],			// 51
 	Job,				// 52
 	MyStyleWalk,		// 53
-	MyCarFaccion,		// 54 ---------------------------- Empty
 	Saldo,				// 55
 	LicenciaPesca,		// 56
 	IntermitentState,	// 57
-	MyStyleSprint,		// 58  ---------------------------- Empty
 	MyStyleTalk,		// 59
 	IsPlayerInBizz,		// 60
-	RingTone,			// 61   ---------------------------- Empty
 	IsPlayerInGarage,	// 62
-	//////////////////////////////////
 	WeaponS[13],
 	AmmoS[13],
 	Asignados[3],
-    RingToneSMS,            // ---------------------------- Empty
     Bolsa[4],
     BolsaC[4],
     HaveBolsa,
@@ -1572,7 +1558,6 @@ enum DataUsers
    	IsPlayerInBank,
     AlertSMSBank,
     HorasWork,
-	Empty00,                // ---------------------------- Empty
 	CameraLogin,
 	Enfermedad,
 	Description,
@@ -1581,70 +1566,10 @@ enum DataUsers
 	DescriptionColor,
 	DescriptionSelect,
 	SpawnFac,
-	Empy_77,
- /// 3rd line
 	WantAudio,
 	Objetos[MAX_OBJECTS_PLAYERS],
 	ObjetosVision[MAX_OBJECTS_PLAYERS],
-	TypePhone,
-	Empty20,
-	Empty21,
-	Empty22,
-	Empty23,
-	Empty24,
-	Empty25,
-	Empty26,
-	Empty27,
-	Empty28,
-	Empty29,
-	Empty30,
-	Empty31,
-	Empty32,
-	Empty33,
-	Empty34,
-	Empty35,
-	Empty36,
-	Empty37,
-	Empty38,
-	Empty39,
-	Empty40,
-	Empty41,
-	Empty42,
-	Empty43,
-	Empty44,
-	Empty45,
-	Empty46,
-	Empty47,
-	Empty48,
-	Empty49,
-	Empty50,
-	Empty51,
-	Empty52,
-	Empty53,
-	Empty54,
-	Empty55,
-	Empty56,
-	Empty57,
-	Empty58,
-	Empty59,
-	Empty60,
-	Empty61,
-	Empty62,
-	Empty63,
-	Empty64,
-	Empty65,
-	Empty66,
-	Empty67,
-	Empty68,
-	Empty69,
-	Empty70,
-	Empty71,
-	Empty72,
-	Empty73,
-	Empty74,
-	Empty75,
-	Empty76,
-	Empty77
+	TypePhone
 };
 enum Agenda
 {
@@ -1859,8 +1784,9 @@ enum JailType
 	WorldLiberado
 }
 /// 				NEW
+new MySQL:dataBase;
 new ResetGM;
-new SERVER_PORT;
+new SERVER_PORT_;
 new TramSFID;
 new TimeTren;
 new bool:WeaponEnableDM[47];
@@ -1931,16 +1857,14 @@ new MAX_PICKUP;
 new MAX_GARAGES_EX;
 new MAX_TEXT_DRAW;
 new DIR_PISTAS[10] 		= "\\Pistas\\";
-new DIR_EMAILS[10] 		= "\\Emails\\";
-new DIR_USERS[10] 		= "\\Users\\";
+new DIR_USERS[10] 		= "users";
 new DIR_FACCIONES[14] 	= "\\Facciones\\";
-new DIR_VEHICLES[12] 	= "\\Vehicles\\";
-new DIR_VEHICLESF[13] 	= "\\VehiclesF\\";
-new DIR_VEHICLESP[13] 	= "\\VehiclesP\\";
-new DIR_NEGOCIOS[12] 	= "\\Negocios\\";
+new DIR_VEHICLES[12] 	= "vehicles";
+new DIR_VEHICLESF[13] 	= "vehiclesf";
+new DIR_VEHICLESP[13] 	= "vehiclesp";
+new DIR_NEGOCIOS[12] 	= "negocios";
 new DIR_MISC[9] 		= "\\Misc\\";
-new DIR_MOVILES[11] 	= "\\Móviles\\";
-new DIR_HOUSES[10] 		= "\\Houses\\";
+new DIR_HOUSES[10] 		= "casas";
 new DIR_CONTACTS[12]	= "\\Contacts\\";
 new DIR_NOTES[10]		= "\\Notes\\";
 new DIR_MAPS[8] 		= "\\Maps\\";
@@ -1949,7 +1873,7 @@ new DIR_TELES[13]		= "\\TelesLock\\";
 new DIR_GARAGES_EX[13]	= "\\GaragesEx\\";
 new DIR_BOMBAS[10] 		= "\\Bombas\\";
 new DIR_VCP[7] 			= "\\VCP\\";
-new DIR_ACCOUNT_BANK[15]= "\\AccountBank\\";
+new DIR_ACCOUNT_BANK[15]= "users_banco";
 new DIR_DDOS[24]        = "\\DDoS\\connections.dat";
 new DIR_DDOS_BAN[24]    = "\\DDoS\\ban.dat";
 new DIR_CONNECTIONS[16]    = "\\Connections\\";
@@ -4948,32 +4872,10 @@ new ARMA_ANIMATIONS      	[17][30];	// ARMA - 16
 new WUZI_ANIMATIONS      	[12][30];	// WUZI - 11
 new PED_ANIMATIONS      	[286][30]; 	// PED - 285
 
-
-//////////////////////////////// SCRIPTFILE ////////////////////////////////
-#if defined FILTERSCRIPT
-
-public OnFilterScriptInit()
-{
-	print("\n--------------------------------------");
-	print(" Server RolePlay of Fonix Game");
-	print("--------------------------------------\n");
-	return 1;
-}
-
-public OnFilterScriptExit()
-{
-	return 1;
-}
-
-#else
-
 main()
 {
-
 }
 
-#endif
-//////////////////////////////// END SCRIPTFILE ////////////////////////////////
 public OnGameModeInit()
 {
 //	ConvertMap("Mecas ARREGLADO", 1);
@@ -4989,8 +4891,10 @@ public OnGameModeInit()
 	}
 
 	print("\n\n\n\n\n\n\n___________________ INICIANDO GAMEMODE ___________________");
+	MySQLConnect();
 	
 	SetGameModeText(GAMEMODE_VERSION);
+	
 
 	// LOGO
 	Url_WebShadow = TextDrawCreateEx(32.1, 428.1, URL_WEB_SHADOW);
@@ -6089,6 +5993,40 @@ public OnGameModeInit()
 	return 1;
 }
 
+public MySQLConnect()
+{
+    print("___________________ CONECTANDO CON BASE DE DATOS... ___________________");
+    new errno;
+    dataBase = mysql_connect_file("mysql.ini");
+    errno = mysql_errno(dataBase);
+    if(errno != 0)
+    {
+        new error[100];
+        mysql_error(error, 100, dataBase);
+        print("\n\n\n ERROR AL CONECTAR CON LA BASE DE DATOS !!!!!!");
+        printf("[MySQL]: Connection Error: #%d '%s'\n\n\n", errno, error);
+        SendRconCommand("exit");
+    }
+    else print("________________ BASE DE DATOS CONECTADA CORRECTAMENTE! ________________");
+	return 1;
+}
+
+public OnQueryError(errorid, const error[], const callback[], const query[], MySQL:handle)
+{
+	switch(errorid)
+	{
+		case CR_SERVER_GONE_ERROR:
+		{
+			print("Lost connection to server");
+		}
+		case ER_SYNTAX_ERROR:
+		{
+			printf("Something is wrong in your syntax, query: %s",query);
+		}
+	}
+	return 1;
+}
+
 public OnGameModeExit()
 {
 	if ( !ResetGM )
@@ -6109,12 +6047,16 @@ public OnPlayerRequestClass(playerid, classid)
 		    SendClientMessage(playerid, 0xFFFFFFFF, "");
 		}
 
-		SendInfoMessage(playerid, 2, "0", LOGO_FONIXGAME);
-		new DirBD[50];
-		format(DirBD, sizeof(DirBD), "%s%s.ulp", DIR_USERS, PlayersDataOnline[playerid][NameOnline]);
+		SendInfoMessage(playerid, 2, "0", LOGO_UNPLAYER);
+
+		new query[100], Cache:cacheid, cuentaExiste;
+		mysql_format(dataBase, query, 100, "SELECT * FROM `%s` WHERE `Nombre`='%e';", DIR_USERS, PlayersDataOnline[playerid][NameOnline]);
+		cacheid = mysql_query(dataBase, query);
+		cache_get_row_count(cuentaExiste);
+		cache_delete(cacheid);
 
 		// LOGIN
-		if ( fexist(DirBD) )
+		if ( cuentaExiste )
 		{
 		    PlayersDataOnline[playerid][State] = 1;
 		    DataUserLoad(playerid);
@@ -6174,7 +6116,7 @@ public OnPlayerConnect(playerid)
 				SendClientMessage(playerid, 0x002DFFFF, "Para el servidor de Role Play es requerido que utilice el formato de nick name Nombre_Apellido.");
 				SendClientMessage(playerid, 0x002DFFFF, "{F5FF00}Ejemplo: {00F50A}Juan_Perez, Jorge_Pelaez");
 				SendClientMessage(playerid, 0x002DFFFF, " ");
-				SendClientMessage(playerid, 0x002DFFFF, "Cualquier duda al respecto sobre el regístro puede consultarlo en www.FonixGame.foroactivo.com");
+				SendClientMessage(playerid, 0x002DFFFF, "Cualquier duda al respecto sobre el regístro puede consultarlo en "WEBPAGE"");
 				KickEx(playerid, 99);
 		}
 	}
@@ -6455,7 +6397,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
 	      				SendInfoMessage(playerid, 1, "/Copyright - /Reglas - /Duda - /Stats - /Cuenta - /Hora - /Hablar - /Caminar - /Reportar [ID] [Razón]", "Principales: ");
 					    SendInfoMessage(playerid, 1, "/Ayuda {Básicos, Canales, Facción, Rangos, Banco, Crear, Coche, Móvil, Casa, Negocio, Estados, Dar, Coger, Dejar, Usar, Otros}", "Info Extra: ");
 					    SendInfoMessage(playerid, 1, "/Ayuda {Idiomas, Trabajo, Radio, Tirar, Móvil, Luces, Canales, Aceptar, Llaves, DeathMatch, Carreras, Animaciones 1 - 3}", "Info Extra: ");
-						SendInfoMessage(playerid, 1, "Para más información visite nuestros foros en www.FonixGame.foroactivo.com. Use /Duda o puede whispear a un admin con /W [ID] [Duda] (Ver /Staff)", " ");
+						SendInfoMessage(playerid, 1, "Para más información visite nuestros foros en "WEBPAGE". Use /Duda o puede whispear a un admin con /W [ID] [Duda] (Ver /Staff)", " ");
 			    	}
 			    	// COMANDO: /Ayuda Canales
 				  	else if (strcmp("/Ayuda Básicos", cmdtext, true, 14) == 0 && strlen(cmdtext) == 14 ||
@@ -10838,10 +10780,10 @@ public OnPlayerCommandText(playerid, cmdtext[])
 		    	    format(MsgDialogCopyright, sizeof(MsgDialogCopyright),
 					"{00F50A}Específicaciones:\n\n{00A5FF}Versión: {F0F0F0}%s\n",
 					GAMEMODE_VERSION);
-		    	    strcat(MsgDialogCopyright, "{00A5FF}Creadores: {F0F0F0}Equipo de Fonix Game.\n\n");
+		    	    strcat(MsgDialogCopyright, "{00A5FF}Creadores: {F0F0F0}Equipo de Un Player.\n\n");
 		    	    strcat(MsgDialogCopyright, "{F5FF00}Agradecimientos: \n{F0F0F0}San Andrea Multiplayer (SA-MP)\n{F0F0F0}Rockstar Games\n{F0F0F0}Incognito");
-		    	    strcat(MsgDialogCopyright, "\n\n\n\n{F5FF00}Copyright © 2015-2016 Fonix Game. Todos los derechos reservados.");
-					ShowPlayerDialogEx(playerid, 999, DIALOG_STYLE_MSGBOX, "{00A5FF}Copyright © Fonix Game.", MsgDialogCopyright, "Aceptar", "");
+		    	    strcat(MsgDialogCopyright, "\n\n\n\n{F5FF00}Copyright © 2015-2016 Un Player. Todos los derechos reservados.");
+					ShowPlayerDialogEx(playerid, 999, DIALOG_STYLE_MSGBOX, "{00A5FF}Copyright © Un Player.", MsgDialogCopyright, "Aceptar", "");
 				}
 				// COMANDO: /Grúa
 			  	/*else if (strcmp("/Grúa", cmdtext, true, 5) == 0 && strlen(cmdtext) == 5 ||
@@ -16307,13 +16249,6 @@ public OnPlayerCommandText(playerid, cmdtext[])
 							    {
 							        if ( PlayersData[strval(cmdtext[11])][Phone] == 0 )
 							        {
-			      						new numberstr[50];
-								        format(numberstr, sizeof(numberstr), "%s%i.ulp", DIR_MOVILES, PlayersData[playerid][Phone]);
-										// Asignar el nuevo dueño
-									    new File:fEscribir1 = fopen(numberstr, io_write);
-										fwrite(fEscribir1, PlayersDataOnline[strval(cmdtext[11])][NameOnline]);
-										fclose(fEscribir1);
-
 										PlayersData[strval(cmdtext[11])][Phone] = PlayersData[playerid][Phone];
 										PlayersData[playerid][Phone] = 0;
 										RemoveObjectBolsillo(playerid, 3);
@@ -16322,6 +16257,12 @@ public OnPlayerCommandText(playerid, cmdtext[])
 										new MsgMeDarMovil[MAX_TEXT_CHAT];
 										format(MsgMeDarMovil, sizeof(MsgMeDarMovil), "le ha dado un móvil a %s", PlayersDataOnline[strval(cmdtext[11])][NameOnlineFix]);
 							        	Acciones(playerid, 8, MsgMeDarMovil);
+							        	
+							        	new query[200];
+							        	mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Phone`='%i' WHERE `Nombre`='%e';", DIR_USERS, PlayersData[strval(cmdtext[11])][Phone], PlayersDataOnline[strval(cmdtext[11])][NameOnline]);
+							        	mysql_query(dataBase, query, false);
+							        	mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Phone`='0' WHERE `Nombre`='%e';", DIR_USERS, PlayersData[playerid][Phone], PlayersDataOnline[playerid][NameOnline]);
+							        	mysql_query(dataBase, query, false);
 									}
 							        else
 							        {
@@ -20643,19 +20584,14 @@ public OnPlayerCommandText(playerid, cmdtext[])
 					    {
 					        if ( PlayersDataOnline[playerid][InCall] == -1 )
 					        {
-	                            new numberstr[50];
-						        format(numberstr, sizeof(numberstr), "%s%i.ulp", DIR_MOVILES, PlayersData[playerid][Phone]);
-								// Borrar datos del teléfono
-								if ( fexist(numberstr) )
-								{
-								    new File:fEscribir1 = fopen(numberstr, io_write);
-									fwrite(fEscribir1, "");
-									fclose(fEscribir1);
-								}
 								RemoveObjectBolsillo(playerid, 3);
 								PlayersData[playerid][Phone] = 0;
 						        Acciones(playerid, 8, "ha tirado su móvil al suelo");
 						        SendInfoMessage(playerid, 2, "0", "Has botado su móvil, ahora no podrá realizar llamadas");
+						        
+						        new query[200];
+						        mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Phone`='0' WHERE `Nombre`='%e';", DIR_USERS, PlayersData[playerid][Phone], PlayersDataOnline[playerid][NameOnline]);
+							    mysql_query(dataBase, query, false);
 							}
 							else
 							{
@@ -22410,11 +22346,14 @@ public OnPlayerCommandText(playerid, cmdtext[])
 							{
 							    if ( IsValidName(NewName) )
 							    {
-									new DirBD[50];
-									format(DirBD, sizeof(DirBD), "%s%s.ulp", DIR_USERS, NewName);
-									new DirBDIn[50];
-									format(DirBDIn, sizeof(DirBDIn), "%s%s.ulp", DIR_USERS, PlayersDataOnline[playeridChange][NameOnline]);
-									if ( !fexist(DirBD) )
+							    
+									new query[100], Cache:cacheid, cuentaExiste;
+									mysql_format(dataBase, query, 100, "SELECT * FROM `%s` WHERE `Nombre`='%e';", DIR_USERS, NewName);
+									cacheid = mysql_query(dataBase, query);
+									cache_get_row_count(cuentaExiste);
+									cache_delete(cacheid);
+									
+									if ( !cuentaExiste )
 									{
 								        switch(SetPlayerName(playeridChange, NewName))
 								        {
@@ -22440,6 +22379,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
 										        if ( PlayersData[playeridChange][Car] != -1 )
 										        {
 													format(DataCars[PlayersData[playeridChange][Car]][Dueno], MAX_PLAYER_NAME, "%s", PlayersDataOnline[playeridChange][NameOnline]);
+													SaveDataVehicle(PlayersData[playeridChange][Car], DIR_VEHICLES);
 												}
 										        // CASA
 										        if ( PlayersData[playeridChange][House] != -1 )
@@ -22455,20 +22395,17 @@ public OnPlayerCommandText(playerid, cmdtext[])
 									                if ( IsLlavesAmigo != -1 )
 									                {
 							                        	format(HouseFriends[i][IsLlavesAmigo][Name], MAX_PLAYER_NAME, "%s", PlayersDataOnline[playeridChange][NameOnline]);
+							                        	SaveHouse(i, false);
 									                }
 								                }
+								                // Banco
+								                if ( PlayersData[playerid][AccountBankingOpen] )
+								                {
+								                    SaveAccountBanking(playeridChange);
+								                }
 
-								                // Móvil
-										        if ( PlayersData[playeridChange][Phone] != 0)
-										        {
-										            new numberstr[50];
-											        format(numberstr, sizeof(numberstr), "%s%i.ulp", DIR_MOVILES, PlayersData[playeridChange][Phone]);
-												    new File:fEscribir3 = fopen(numberstr, io_write);
-													fwrite(fEscribir3, PlayersDataOnline[playeridChange][NameOnline]);
-													fclose(fEscribir3);
-												}
-
-												fremove(DirBDIn);
+												mysql_format(dataBase, query, 100, "UPDATE `%s` SET `Nombre`='%e' WHERE `Nombre`='%e';", DIR_USERS, NewName, LastName);
+												mysql_query(dataBase, query, false);
 												DataUserSave(playeridChange);
 
 												new MsgNombreCambiadoMe[MAX_TEXT_CHAT];
@@ -23643,31 +23580,22 @@ public OnPlayerCommandText(playerid, cmdtext[])
 					MsgAdminUseCommands(9, playerid, cmdtext);
 					if (PlayersData[playerid][Admin] >= 3)
 					{
-					    new DataNumber[MAX_PLAYER_NAME];
-					    new DirTemp[MAX_TEXT_CHAT];
-						format(DirTemp, sizeof(DirTemp), "%s%i.ulp", DIR_MOVILES, strval(cmdtext[8]));
-						if ( fexist(DirTemp) )
+         				new query[200], numberExist, PhoneOwner[MAX_PLAYER_NAME];
+         				
+					    mysql_format(dataBase, query, 200, "SELECT `Nombre`,`Phone` FROM `%s` WHERE `Phone`='%i';", DIR_USERS, strval(cmdtext[8]));
+					    new Cache:cacheid = mysql_query(dataBase, query);
+					    cache_get_row_count(numberExist);
+					    if ( numberExist )
+						cache_get_value_name(0, "Nombre", PhoneOwner);
+					    cache_delete(cacheid);
+						if ( numberExist && strval(cmdtext[8]) != 0)
 						{
-							new File:PhoneFile = fopen(DirTemp, io_read);
-							fread(PhoneFile, DataNumber);
-							fclose(PhoneFile);
-
-							if ( strlen(DataNumber) >= 2 )
-							{
-							    new MsgNumber[MAX_TEXT_CHAT];
-							    format(MsgNumber, sizeof(MsgNumber), "%s El número %i pertenece al jugador %s", LOGO_STAFF, strval(cmdtext[8]), DataNumber);
-								SendClientMessage(playerid, COLOR_MENSAJES_DE_AVISOS, MsgNumber);
-							}
-							else
-							{
-								SendInfoMessage(playerid, 0, "953", "Ese número no pertenece a ningún jugador! Pero fue usado!");
-							}
+							new MsgNumber[MAX_TEXT_CHAT];
+						    format(MsgNumber, sizeof(MsgNumber), "%s El número %i pertenece al jugador %s", LOGO_STAFF, strval(cmdtext[8]), PhoneOwner);
+							SendClientMessage(playerid, COLOR_MENSAJES_DE_AVISOS, MsgNumber);
 						}
-						else
-						{
-							SendInfoMessage(playerid, 0, "954", "Ese número no pertenece a ningún jugador!");
-						}
-
+						else SendInfoMessage(playerid, 0, "954", "Ese número no pertenece a ningún jugador!");
+						return 1;
 					}
 					else
 					{
@@ -24393,14 +24321,14 @@ public OnPlayerCommandText(playerid, cmdtext[])
 					    new SendString[4];
 						strmid(SendString, cmdtext, 7, strlen(cmdtext), sizeof(SendString));
 
-						/*if ( strval(SendString) > 45)
+						if ( strval(SendString) > 45)
 						{
 							SendInfoMessage(playerid, 0, "191", "El tipo de clima esta fuera de los límites, recuerda que el máximo es 45.");
 						}
 						else
-						{*/
-		       			Comandos_Admin(20, playerid, 0, PlayersData[playerid][Admin], strval(SendString), "0");
-						//}
+						{
+		       				Comandos_Admin(20, playerid, 0, PlayersData[playerid][Admin], strval(SendString), "0");
+						}
 						return 1;
 					}
 					else
@@ -27115,10 +27043,10 @@ public OnPlayerUpdate(playerid)
 	    //////////////// Anticheat Money...
 		if ( PlayersData[playerid][Dinero] != GetPlayerMoney(playerid) )
 		{
-/*		    if ( PlayersDataOnline[playerid][StateMoneyPass] <= MyTime )
+		    if ( PlayersDataOnline[playerid][StateMoneyPass] <= MyTime )
 			{
 				IsCheatMoney(playerid, GetPlayerMoney(playerid));
-			}*/
+			}
 			ResetPlayerMoney(playerid);
 			GivePlayerMoney(playerid, PlayersData[playerid][Dinero]);
 		}
@@ -27260,13 +27188,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					}
 					else
 					{
-						ShowPlayerLogin(playerid, false);
+      					ShowPlayerLogin(playerid, false);
 						SendInfoMessage(playerid, 0, "209", "Contraseña incorrecta, vuelva a intentarlo");
 					}
 			    }
 			    else
 			    {
-					SendInfoMessage(playerid, 0, "210", "Esta cuenta se encuentra baneada. Consultalo en FonixGame.foroactivo.com/Soporte gracias.");
+					SendInfoMessage(playerid, 0, "210", "Esta cuenta se encuentra baneada. Consultalo en "WEBPAGE"/Soporte gracias.");
 				    KickEx(playerid, 3);
 				}
 			}
@@ -27276,7 +27204,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			    {
 			        if ( strlen(PlayersData[playerid][Email]) != 2 )
 			        {
-						ShowPlayerVerifiquedEmail(playerid, true);
+			            SendInfoMessage(playerid, 0, "0", "Servicio de recuperacion de contraseñas no disponible.");
+					    ShowPlayerLogin(playerid, true);
+						//ShowPlayerVerifiquedEmail(playerid, true);
 					}
 					else
 					{
@@ -27288,7 +27218,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			    {
 			        if ( !PlayersDataOnline[playerid][SaveAfterAgenda][0] )
 			        {
-						SendInfoMessage(playerid, 2, "0", "Gracias por entrar en el servidor, recuerde visitar www.FonixGame.foroactivo.com!");
+						SendInfoMessage(playerid, 2, "0", "Gracias por entrar en el servidor, recuerde visitar "WEBPAGE"!");
 						KickEx(playerid, 4);
 					}
 					else
@@ -27327,7 +27257,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			}
 			else
 			{
-				SendInfoMessage(playerid, 2, "0", "Recuerde que para ingresar el servidor debe regístrarse. Vuelva pronto! Visite www.FonixGame.foroactivo.com");
+				SendInfoMessage(playerid, 2, "0", "Recuerde que para ingresar el servidor debe regístrarse. Vuelva pronto! Visite "WEBPAGE"");
 				KickEx(playerid, 5);
 			}
 		}
@@ -27374,7 +27304,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		  	PlayersDataOnline[playerid][LoginTime] = gettime();
 			PlayersDataOnline[playerid][State] = 3;
 			GivePlayerMoneyEx(playerid, 800);
-		    SpawnPlayerEx(playerid);
 		    SetPlayerVirtualWorldEx(playerid, PlayersData[playerid][World]);
 
 		    DataUserSave(playerid);
@@ -27399,10 +27328,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			{
 				PlayersDataOnline[playerid][Paga] = false;
 			}
-			PlayersData[playerid][InTutorial] = true;
-		    TogglePlayerControllableEx(playerid, false);
-			PlayersDataOnline[playerid][IsNotSilenciado] = false;
-			SetPlayerTutorial(playerid, 0);
+			ShowPlayerDialogEx(playerid, 153, DIALOG_STYLE_MSGBOX, "{00A5FF}Tutorial", "{F0F0F0}Desea ver el tutorial?", "Ver", "Saltar");
 		}
 		//  SKIN
 		case 5:
@@ -29315,7 +29241,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		// Validación del E-mail
 		case 93:
 		{
-			ShowPlayerDialogEx(playerid, 93, DIALOG_STYLE_MSGBOX, "{00A5FF}Validando E-mail...", "{F0F0F0}Porfavor espere mientras se valida su E-mail...", "Espere...", "");
+			//ShowPlayerDialogEx(playerid, 93, DIALOG_STYLE_MSGBOX, "{00A5FF}Validando E-mail...", "{F0F0F0}Porfavor espere mientras se valida su E-mail...", "Espere...", "");
 		}
 		// Error para Pistas, Informaciones y Otros
 		case 94:
@@ -30702,11 +30628,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					format(ReasonClose, sizeof(ReasonClose), "{00A5FF}Razón por la que se cerró: {00F50A}[No especificada]");
 				}
-				SendClientMessageToAll(COLOR_MESSAGES[2], "{F50000}ATENCIÓN: {00F50A}Hemos cerrado el servidor, {F50000}Recuerde visitar nuestro web site en: {00F50A}FonixGame.foroactivo.com!");
+				SendClientMessageToAll(COLOR_MESSAGES[2], "{F50000}ATENCIÓN: {00F50A}Hemos cerrado el servidor, {F50000}Recuerde visitar nuestro web site en: {00F50A}"WEBPAGE"!");
 				SendClientMessageToAll(COLOR_MESSAGES[2], ReasonClose);
 			   	SendClientMessageToAll(0x000000FF, " ");
 				SendClientMessageToAll(COLOR_MESSAGES[2], "{E6E6E6}Saludos Cordiales,");
-				SendClientMessageToAll(COLOR_MESSAGES[2], "{E6E6E6}Equipo de Fonix Game.");
+				SendClientMessageToAll(COLOR_MESSAGES[2], "{E6E6E6}Equipo de Un Player.");
 				GameTextForAll( "~R~Servidor Cerrado...", 6000, 0);
 				SendRconCommand("exit");
 			}
@@ -31192,6 +31118,25 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			    ShowDejarObjeto(playerid);
 			}
 		}
+		// Saltar Tutorial
+		case 153:
+		{
+		    if (response)
+		    {
+		        PlayersData[playerid][InTutorial] = true;
+			    TogglePlayerControllableEx(playerid, false);
+				PlayersDataOnline[playerid][IsNotSilenciado] = false;
+				SetPlayerTutorial(playerid, 0);
+		    }
+		    else
+		    {
+				PlayersDataOnline[playerid][StateDeath] = true;
+		        SetPlayerVirtualWorldEx(playerid, 0);
+				UpdateSpawnPlayer(playerid);
+				SpawnPlayerEx(playerid);
+				SendInfoMessage(playerid, 2, "0", "Servidor: Has sido spawneado correctamente. Cualquier duda frente al gamemode, no dudes en usar /duda.");
+		    }
+		}
 	}
 	//// END DIALOGS
 	return 1;
@@ -31289,8 +31234,6 @@ public DataUserClean(playerid)
 	// DATA USERS
     PlayersData[playerid][EmailTime]  	 = 0;
     format(PlayersData[playerid][Email], 25, "No");
-    PlayersData[playerid][Zero] 		= 0;
-    PlayersData[playerid][Empy] 		= 0;
     format(PlayersData[playerid][Password], 25, "0");
     PlayersData[playerid][AccountState] = 0;
     PlayersData[playerid][Spawn_X] 		= 0;
@@ -31357,19 +31300,15 @@ public DataUserClean(playerid)
     PlayersData[playerid][IsPlayerInHouse]	= false;
     PlayersData[playerid][TimeEquipo]		= 0;
     PlayersData[playerid][SpawnAmigo]		= 0;
-    PlayersData[playerid][AmmoP]			= 0;
     PlayersData[playerid][IsPaga]			= 0;
 	format(PlayersData[playerid][MyIP], 16, "0");
     PlayersData[playerid][Job]				= 0;
 	PlayersData[playerid][MyStyleWalk]		= 0;
-	PlayersData[playerid][MyCarFaccion]		= 0;
 	PlayersData[playerid][Saldo]			= 50;
 	PlayersData[playerid][LicenciaPesca]	= 0;
 	PlayersData[playerid][IntermitentState]= false;
-	PlayersData[playerid][MyStyleSprint]	= 0;
 	PlayersData[playerid][MyStyleTalk]		= 0;
 	PlayersData[playerid][IsPlayerInBizz]	= false;
-	PlayersData[playerid][RingTone]			= 0;
 	PlayersData[playerid][IsPlayerInGarage]	= 0;
 
     PlayersData[playerid][WeaponS][0] 	= 0;
@@ -31401,7 +31340,6 @@ public DataUserClean(playerid)
     PlayersData[playerid][Asignados][0] 	= 0;
     PlayersData[playerid][Asignados][1]		= 0;
     PlayersData[playerid][Asignados][2] 	= 0;
-    PlayersData[playerid][RingToneSMS] 	= 0;
     PlayersData[playerid][Bolsa][0]	= 0;
     PlayersData[playerid][Bolsa][1]	= 0;
     PlayersData[playerid][Bolsa][2]	= 0;
@@ -31440,7 +31378,6 @@ public DataUserClean(playerid)
 	PlayersData[playerid][IsPlayerInBank]= false;
     PlayersData[playerid][AlertSMSBank]	= false;
     PlayersData[playerid][HorasWork]	= 0;
-	PlayersData[playerid][Empty00]  	= false;
 	PlayersData[playerid][CameraLogin]	= 0;
 	PlayersData[playerid][Enfermedad]	= 0;
     PlayersData[playerid][Description]  = 0;
@@ -31449,7 +31386,6 @@ public DataUserClean(playerid)
 	PlayersData[playerid][DescriptionColor]		= 0;
 	PlayersData[playerid][DescriptionSelect]	= 0;
 	PlayersData[playerid][SpawnFac]		= 0;
-	PlayersData[playerid][Empy_77]		= 0;
 	
 	// Nuevos 77
 	PlayersData[playerid][WantAudio]	= 0;
@@ -31458,78 +31394,20 @@ public DataUserClean(playerid)
 	PlayersData[playerid][Objetos][2]	= 0;
 	PlayersData[playerid][Objetos][3]	= 0;
 	PlayersData[playerid][Objetos][4]	= 0;
+	PlayersData[playerid][Objetos][5]		= 0;
+	PlayersData[playerid][Objetos][6]		= 0;
+	PlayersData[playerid][Objetos][7]		= 0;
+	PlayersData[playerid][Objetos][8]		= 0;
 	PlayersData[playerid][ObjetosVision][0]		= 0;
 	PlayersData[playerid][ObjetosVision][1]		= 0;
 	PlayersData[playerid][ObjetosVision][2]		= 0;
 	PlayersData[playerid][ObjetosVision][3]		= 0;
 	PlayersData[playerid][ObjetosVision][4]		= 0;
-	PlayersData[playerid][TypePhone]	= 0;
 	PlayersData[playerid][ObjetosVision][5]		= 0;
 	PlayersData[playerid][ObjetosVision][6]		= 0;
 	PlayersData[playerid][ObjetosVision][7]		= 0;
 	PlayersData[playerid][ObjetosVision][8]		= 0;
-	PlayersData[playerid][Objetos][5]		= 0;
-	PlayersData[playerid][Objetos][6]		= 0;
-	PlayersData[playerid][Objetos][7]		= 0;
-	PlayersData[playerid][Objetos][8]		= 0;
-	PlayersData[playerid][Empty20]		= 0;
-	PlayersData[playerid][Empty21]		= 0;
-	PlayersData[playerid][Empty22]		= 0;
-	PlayersData[playerid][Empty23]		= 0;
-	PlayersData[playerid][Empty24]		= 0;
-	PlayersData[playerid][Empty25]		= 0;
-	PlayersData[playerid][Empty26]		= 0;
-	PlayersData[playerid][Empty27]		= 0;
-	PlayersData[playerid][Empty28]		= 0;
-	PlayersData[playerid][Empty29]		= 0;
-	PlayersData[playerid][Empty30]		= 0;
-	PlayersData[playerid][Empty31]		= 0;
-	PlayersData[playerid][Empty32]		= 0;
-	PlayersData[playerid][Empty33]		= 0;
-	PlayersData[playerid][Empty34]		= 0;
-	PlayersData[playerid][Empty35]		= 0;
-	PlayersData[playerid][Empty36]		= 0;
-	PlayersData[playerid][Empty37]		= 0;
-	PlayersData[playerid][Empty38]		= 0;
-	PlayersData[playerid][Empty39]		= 0;
-	PlayersData[playerid][Empty40]		= 0;
-	PlayersData[playerid][Empty41]		= 0;
-	PlayersData[playerid][Empty42]		= 0;
-	PlayersData[playerid][Empty43]		= 0;
-	PlayersData[playerid][Empty44]		= 0;
-	PlayersData[playerid][Empty45]		= 0;
-	PlayersData[playerid][Empty46]		= 0;
-	PlayersData[playerid][Empty47]		= 0;
-	PlayersData[playerid][Empty48]		= 0;
-	PlayersData[playerid][Empty49]		= 0;
-	PlayersData[playerid][Empty50]		= 0;
-	PlayersData[playerid][Empty51]		= 0;
-	PlayersData[playerid][Empty52]		= 0;
-	PlayersData[playerid][Empty53]		= 0;
-	PlayersData[playerid][Empty54]		= 0;
-	PlayersData[playerid][Empty55]		= 0;
-	PlayersData[playerid][Empty56]		= 0;
-	PlayersData[playerid][Empty57]		= 0;
-	PlayersData[playerid][Empty58]		= 0;
-	PlayersData[playerid][Empty59]		= 0;
-	PlayersData[playerid][Empty60]		= 0;
-	PlayersData[playerid][Empty61]		= 0;
-	PlayersData[playerid][Empty62]		= 0;
-	PlayersData[playerid][Empty63]		= 0;
-	PlayersData[playerid][Empty64]		= 0;
-	PlayersData[playerid][Empty65]		= 0;
-	PlayersData[playerid][Empty66]		= 0;
-	PlayersData[playerid][Empty67]		= 0;
-	PlayersData[playerid][Empty68]		= 0;
-	PlayersData[playerid][Empty69]		= 0;
-	PlayersData[playerid][Empty70]		= 0;
-	PlayersData[playerid][Empty71]		= 0;
-	PlayersData[playerid][Empty72]		= 0;
-	PlayersData[playerid][Empty73]		= 0;
-	PlayersData[playerid][Empty74]		= 0;
-	PlayersData[playerid][Empty75]		= 0;
-	PlayersData[playerid][Empty76]		= 0;
-	PlayersData[playerid][Empty77]		= 0;
+	PlayersData[playerid][TypePhone]			= 0;
 
 
     // DATA USERS ONLINE
@@ -31645,568 +31523,426 @@ public DataUserClean(playerid)
 //////////////////// LOAD
 public DataUserLoad(playerid)
 {
-	new DirBD[50];
-	format(DirBD, sizeof(DirBD), "%s%s.ulp", DIR_USERS, PlayersDataOnline[playerid][NameOnline]);
+	new query[500], Cache:cacheid, cuentaExiste;
 
-	if ( fexist(DirBD) )
+	mysql_format(dataBase, query, 500, "SELECT * FROM `%s` WHERE `Nombre`='%e';", DIR_USERS, PlayersDataOnline[playerid][NameOnline]);
+	cacheid = mysql_query(dataBase, query);
+	cache_get_row_count(cuentaExiste);
+
+	if ( cuentaExiste )
 	{
-	    new MyData[MAX_PLAYER_DATA];
-		new PosSplitLast, PosSplitAfter;
-		new File:LoadUser = fopen(DirBD, io_read);
-
-		fread(LoadUser, MyData);
-		PosSplitLast 	= 0;
-		PosSplitAfter 	= 0;
-
-		// DATA USERS
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Zero], 			PosSplitLast, PosSplitAfter); // 00
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empy], 			PosSplitLast, PosSplitAfter); // 01
-	    // Name
-		PosSplitAfter = strfind(MyData, "³", false, PosSplitLast);
-		strmid(PlayersData[playerid][Password], MyData, PosSplitLast, PosSplitAfter, 25);  	  						  // 02
-		PosSplitLast = PosSplitAfter + 1;
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AccountState], 	PosSplitLast, PosSplitAfter); // 03
-	    GetDataPlayersFloat	(playerid, MyData, PlayersData[playerid][Spawn_X], 			PosSplitLast, PosSplitAfter); // 04
-	    GetDataPlayersFloat	(playerid, MyData, PlayersData[playerid][Spawn_Y], 			PosSplitLast, PosSplitAfter); // 05
-	    GetDataPlayersFloat	(playerid, MyData, PlayersData[playerid][Spawn_Z], 			PosSplitLast, PosSplitAfter); // 06
-	    GetDataPlayersFloat	(playerid, MyData, PlayersData[playerid][Spawn_ZZ], 		PosSplitLast, PosSplitAfter); // 07
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][HoursPlaying], 	PosSplitLast, PosSplitAfter); // 08
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][DeahtCount], 		PosSplitLast, PosSplitAfter); // 09
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][KilledCount],		PosSplitLast, PosSplitAfter); // 10
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Phone], 			PosSplitLast, PosSplitAfter); // 11
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][House], 			PosSplitLast, PosSplitAfter); // 12
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Car], 				PosSplitLast, PosSplitAfter); // 13
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Faccion], 			PosSplitLast, PosSplitAfter); // 14
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Rango], 			PosSplitLast, PosSplitAfter); // 15
-	    // GirlFreind
-		PosSplitAfter = strfind(MyData, "³", false, PosSplitLast);
-		strmid(PlayersData[playerid][GirlFreind], MyData, PosSplitLast, PosSplitAfter, MAX_PLAYER_NAME);  	  		  // 16
-		PosSplitLast = PosSplitAfter + 1;
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bolsillos][0], 	PosSplitLast, PosSplitAfter); // 17
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bolsillos][1], 	PosSplitLast, PosSplitAfter); // 18
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bolsillos][2], 	PosSplitLast, PosSplitAfter); // 19
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bolsillos][3], 	PosSplitLast, PosSplitAfter); // 20
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bolsillos][4], 	PosSplitLast, PosSplitAfter); // 21
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Habilidad], 		PosSplitLast, PosSplitAfter); // 22
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Warn], 			PosSplitLast, PosSplitAfter); // 23
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Ciudad], 			PosSplitLast, PosSplitAfter); // 24
-	    GetDataPlayersFloat	(playerid, MyData, PlayersData[playerid][Vida], 			PosSplitLast, PosSplitAfter); // 25
-	    GetDataPlayersFloat	(playerid, MyData, PlayersData[playerid][Chaleco], 			PosSplitLast, PosSplitAfter); // 26
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Cansansio], 		PosSplitLast, PosSplitAfter); // 27
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Dinero], 			PosSplitLast, PosSplitAfter); // 28
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Banco], 			PosSplitLast, PosSplitAfter); // 29
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Jail], 			PosSplitLast, PosSplitAfter); // 30
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Admin], 			PosSplitLast, PosSplitAfter); // 31
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][World], 			PosSplitLast, PosSplitAfter); // 32
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Interior], 		PosSplitLast, PosSplitAfter); // 33
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Skin], 			PosSplitLast, PosSplitAfter); // 34
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Drogas], 			PosSplitLast, PosSplitAfter); // 35
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Materiales], 		PosSplitLast, PosSplitAfter); // 36
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Lata], 			PosSplitLast, PosSplitAfter); // 37
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Ganzuas], 			PosSplitLast, PosSplitAfter); // 38
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Alquiler], 		PosSplitLast, PosSplitAfter); // 39
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bombas], 			PosSplitLast, PosSplitAfter); // 40
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Sexo], 			PosSplitLast, PosSplitAfter); // 41
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Idiomas][0], 		PosSplitLast, PosSplitAfter); // 42
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Idiomas][1], 		PosSplitLast, PosSplitAfter); // 43
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Idiomas][2], 		PosSplitLast, PosSplitAfter); // 44
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Idiomas][3], 		PosSplitLast, PosSplitAfter); // 45
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Idiomas][4], 		PosSplitLast, PosSplitAfter); // 46
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Idiomas][5], 		PosSplitLast, PosSplitAfter); // 47
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Licencias][0],		PosSplitLast, PosSplitAfter); // 48
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Licencias][1], 	PosSplitLast, PosSplitAfter); // 49
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Licencias][2], 	PosSplitLast, PosSplitAfter); // 50
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Licencias][3],		PosSplitLast, PosSplitAfter); // 51
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Licencias][4], 	PosSplitLast, PosSplitAfter); // 52
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Licencias][5], 	PosSplitLast, PosSplitAfter); // 53
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Licencias][6], 	PosSplitLast, PosSplitAfter); // 54
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][IsInJail], 		PosSplitLast, PosSplitAfter); // 55
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Nacer], 			PosSplitLast, PosSplitAfter); // 56
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][TimeRequestBank],	PosSplitLast, PosSplitAfter); // 57
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][MyBonus],			PosSplitLast, PosSplitAfter); // 58
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][InTutorial], 		PosSplitLast, PosSplitAfter); // 59
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Edad], 			PosSplitLast, PosSplitAfter); // 60
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][IsPlayerInHouse], 	PosSplitLast, PosSplitAfter); // 61
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][TimeEquipo], 		PosSplitLast, PosSplitAfter); // 62
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][SpawnAmigo], 		PosSplitLast, PosSplitAfter); // 63
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoP], 			PosSplitLast, PosSplitAfter); // 64
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][IsPaga], 			PosSplitLast, PosSplitAfter); // 65
-	    // MyIP
-		PosSplitAfter = strfind(MyData, "³", false, PosSplitLast);
-		strmid(PlayersData[playerid][MyIP], MyData, PosSplitLast, PosSplitAfter, 16);  	  							  // 66
-		PosSplitLast = PosSplitAfter + 1;
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Job], 				PosSplitLast, PosSplitAfter); // 67
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][MyStyleWalk], 		PosSplitLast, PosSplitAfter); // 68
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][MyCarFaccion], 	PosSplitLast, PosSplitAfter); // 69
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Saldo], 			PosSplitLast, PosSplitAfter); // 70
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][LicenciaPesca], 	PosSplitLast, PosSplitAfter); // 71
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][IntermitentState], PosSplitLast, PosSplitAfter); // 72
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][MyStyleSprint],	PosSplitLast, PosSplitAfter); // 73
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][MyStyleTalk], 		PosSplitLast, PosSplitAfter); // 74
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][IsPlayerInBizz], 	PosSplitLast, PosSplitAfter); // 75
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][RingTone], 		PosSplitLast, PosSplitAfter); // 76
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][IsPlayerInGarage], PosSplitLast, PosSplitAfter); // 77
-
-		fread(LoadUser, MyData);
-		PosSplitLast 	= 0;
-		PosSplitAfter 	= 0;
-
-		// DATA USERS
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][0], 		PosSplitLast, PosSplitAfter); // 00
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][1], 		PosSplitLast, PosSplitAfter); // 01
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][2], 		PosSplitLast, PosSplitAfter); // 02
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][3], 		PosSplitLast, PosSplitAfter); // 03
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][4], 		PosSplitLast, PosSplitAfter); // 04
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][5], 		PosSplitLast, PosSplitAfter); // 05
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][6], 		PosSplitLast, PosSplitAfter); // 06
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][7], 		PosSplitLast, PosSplitAfter); // 07
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][8], 		PosSplitLast, PosSplitAfter); // 08
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][9], 		PosSplitLast, PosSplitAfter); // 09
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][10],		PosSplitLast, PosSplitAfter); // 10
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][11],		PosSplitLast, PosSplitAfter); // 11
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WeaponS][12],		PosSplitLast, PosSplitAfter); // 12
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][0], 		PosSplitLast, PosSplitAfter); // 13
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][1], 		PosSplitLast, PosSplitAfter); // 14
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][2], 		PosSplitLast, PosSplitAfter); // 15
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][3], 		PosSplitLast, PosSplitAfter); // 16
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][4], 		PosSplitLast, PosSplitAfter); // 17
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][5], 		PosSplitLast, PosSplitAfter); // 18
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][6], 		PosSplitLast, PosSplitAfter); // 19
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][7], 		PosSplitLast, PosSplitAfter); // 20
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][8], 		PosSplitLast, PosSplitAfter); // 21
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][9], 		PosSplitLast, PosSplitAfter); // 22
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][10], 		PosSplitLast, PosSplitAfter); // 23
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][11], 		PosSplitLast, PosSplitAfter); // 24
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AmmoS][12], 		PosSplitLast, PosSplitAfter); // 25
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Asignados][0], 	PosSplitLast, PosSplitAfter); // 26
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Asignados][1], 	PosSplitLast, PosSplitAfter); // 27
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Asignados][2], 	PosSplitLast, PosSplitAfter); // 28
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][RingToneSMS], 		PosSplitLast, PosSplitAfter); // 29
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bolsa][0], 		PosSplitLast, PosSplitAfter); // 30
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bolsa][1], 		PosSplitLast, PosSplitAfter); // 31
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bolsa][2], 		PosSplitLast, PosSplitAfter); // 32
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Bolsa][3], 		PosSplitLast, PosSplitAfter); // 33
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][BolsaC][0], 		PosSplitLast, PosSplitAfter); // 34
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][BolsaC][1], 		PosSplitLast, PosSplitAfter); // 35
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][BolsaC][2], 		PosSplitLast, PosSplitAfter); // 36
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][BolsaC][3], 		PosSplitLast, PosSplitAfter); // 37
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][HaveBolsa], 		PosSplitLast, PosSplitAfter); // 38
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][IsPlayerInVehInt], PosSplitLast, PosSplitAfter); // 39
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Cartera][0],		PosSplitLast, PosSplitAfter); // 40
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Cartera][1],		PosSplitLast, PosSplitAfter); // 41
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Cartera][2],		PosSplitLast, PosSplitAfter); // 42
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Cartera][3],		PosSplitLast, PosSplitAfter); // 43
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Cartera][4],		PosSplitLast, PosSplitAfter); // 44
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Cartera][5],		PosSplitLast, PosSplitAfter); // 45
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraC][0], 		PosSplitLast, PosSplitAfter); // 46
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraC][1], 		PosSplitLast, PosSplitAfter); // 47
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraC][2], 		PosSplitLast, PosSplitAfter); // 48
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraC][3], 		PosSplitLast, PosSplitAfter); // 49
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraC][4], 		PosSplitLast, PosSplitAfter); // 50
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraC][5], 		PosSplitLast, PosSplitAfter); // 51
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraT][0], 		PosSplitLast, PosSplitAfter); // 52
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraT][1], 		PosSplitLast, PosSplitAfter); // 53
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraT][2], 		PosSplitLast, PosSplitAfter); // 54
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraT][3], 		PosSplitLast, PosSplitAfter); // 55
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraT][4], 		PosSplitLast, PosSplitAfter); // 56
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraT][5], 		PosSplitLast, PosSplitAfter); // 57
-	    GetDataPlayersInt	(playerid, MyData,PlayersData[playerid][AccountBankingOpen],PosSplitLast, PosSplitAfter); // 58
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraI][0], 		PosSplitLast, PosSplitAfter); // 59
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraI][1], 		PosSplitLast, PosSplitAfter); // 60
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraI][2], 		PosSplitLast, PosSplitAfter); // 61
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraI][3], 		PosSplitLast, PosSplitAfter); // 62
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraI][4], 		PosSplitLast, PosSplitAfter); // 63
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CarteraI][5], 		PosSplitLast, PosSplitAfter); // 64
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][IsPlayerInBank], 	PosSplitLast, PosSplitAfter); // 65
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][AlertSMSBank], 	PosSplitLast, PosSplitAfter); // 66
-	    GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][HorasWork], 		PosSplitLast, PosSplitAfter); // 67
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty00], 			PosSplitLast, PosSplitAfter); // 68
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][CameraLogin], 		PosSplitLast, PosSplitAfter); // 69
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Enfermedad], 		PosSplitLast, PosSplitAfter); // 70
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Description], 		PosSplitLast, PosSplitAfter); // 71
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][EnableDescription],PosSplitLast, PosSplitAfter); // 72
-	    // Estado
-		PosSplitAfter = strfind(MyData, "³", false, PosSplitLast);
-		strmid(PlayersData[playerid][DescriptionString], MyData, PosSplitLast, PosSplitAfter, MAX_TEXT_DESCRIPTION);  // 73
-		PosSplitLast = PosSplitAfter + 1;
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][DescriptionColor],	PosSplitLast, PosSplitAfter); // 74
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][DescriptionSelect],PosSplitLast, PosSplitAfter); // 75
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][SpawnFac],			PosSplitLast, PosSplitAfter); // 76
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empy_77], 			PosSplitLast, PosSplitAfter); // 77
-
-		fread(LoadUser, MyData);
-		PosSplitLast 	= 0;
-		PosSplitAfter 	= 0;
-		fclose(LoadUser);
+		new WeaponsData[50], AmmoData[50];
 		
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][WantAudio], 	PosSplitLast, PosSplitAfter); 	  // 00
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Objetos][0],	PosSplitLast, PosSplitAfter); 	  // 01
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Objetos][1],	PosSplitLast, PosSplitAfter); 	  // 02
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Objetos][2],	PosSplitLast, PosSplitAfter); 	  // 03
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Objetos][3],	PosSplitLast, PosSplitAfter); 	  // 04
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Objetos][4],	PosSplitLast, PosSplitAfter); 	  // 05
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][ObjetosVision][0], 		PosSplitLast, PosSplitAfter); 	  // 06
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][ObjetosVision][1], 		PosSplitLast, PosSplitAfter); 	  // 07
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][ObjetosVision][2], 		PosSplitLast, PosSplitAfter); 	  // 08
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][ObjetosVision][3], 		PosSplitLast, PosSplitAfter); 	  // 09
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][ObjetosVision][4], 		PosSplitLast, PosSplitAfter); 	  // 10
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][TypePhone], 		PosSplitLast, PosSplitAfter); 	  // 11
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][ObjetosVision][5], 		PosSplitLast, PosSplitAfter); 	  // 12
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][ObjetosVision][6], 		PosSplitLast, PosSplitAfter); 	  // 13
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][ObjetosVision][7], 		PosSplitLast, PosSplitAfter); 	  // 14
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][ObjetosVision][8], 		PosSplitLast, PosSplitAfter); 	  // 15
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Objetos][5], 		PosSplitLast, PosSplitAfter); 	  // 16
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Objetos][6], 		PosSplitLast, PosSplitAfter); 	  // 17
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Objetos][7], 		PosSplitLast, PosSplitAfter); 	  // 18
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Objetos][8], 		PosSplitLast, PosSplitAfter); 	  // 19
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty20], 		PosSplitLast, PosSplitAfter); 	  // 20
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty21], 		PosSplitLast, PosSplitAfter); 	  // 21
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty22], 		PosSplitLast, PosSplitAfter); 	  // 22
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty23], 		PosSplitLast, PosSplitAfter); 	  // 23
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty24], 		PosSplitLast, PosSplitAfter); 	  // 24
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty25], 		PosSplitLast, PosSplitAfter); 	  // 25
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty26], 		PosSplitLast, PosSplitAfter); 	  // 26
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty27], 		PosSplitLast, PosSplitAfter); 	  // 27
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty28], 		PosSplitLast, PosSplitAfter); 	  // 28
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty29], 		PosSplitLast, PosSplitAfter); 	  // 29
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty30], 		PosSplitLast, PosSplitAfter); 	  // 30
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty31], 		PosSplitLast, PosSplitAfter); 	  // 31
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty32], 		PosSplitLast, PosSplitAfter); 	  // 32
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty33], 		PosSplitLast, PosSplitAfter); 	  // 33
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty34], 		PosSplitLast, PosSplitAfter); 	  // 34
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty35], 		PosSplitLast, PosSplitAfter); 	  // 35
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty36], 		PosSplitLast, PosSplitAfter); 	  // 36
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty37], 		PosSplitLast, PosSplitAfter); 	  // 37
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty38], 		PosSplitLast, PosSplitAfter); 	  // 38
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty39], 		PosSplitLast, PosSplitAfter); 	  // 39
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty40], 		PosSplitLast, PosSplitAfter); 	  // 40
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty41], 		PosSplitLast, PosSplitAfter); 	  // 41
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty42], 		PosSplitLast, PosSplitAfter); 	  // 42
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty43], 		PosSplitLast, PosSplitAfter); 	  // 43
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty44], 		PosSplitLast, PosSplitAfter); 	  // 44
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty45], 		PosSplitLast, PosSplitAfter); 	  // 45
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty46], 		PosSplitLast, PosSplitAfter); 	  // 46
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty47], 		PosSplitLast, PosSplitAfter); 	  // 47
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty48], 		PosSplitLast, PosSplitAfter); 	  // 48
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty49], 		PosSplitLast, PosSplitAfter); 	  // 49
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty50], 		PosSplitLast, PosSplitAfter); 	  // 50
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty51], 		PosSplitLast, PosSplitAfter); 	  // 51
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty52], 		PosSplitLast, PosSplitAfter); 	  // 52
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty53], 		PosSplitLast, PosSplitAfter); 	  // 53
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty54], 		PosSplitLast, PosSplitAfter); 	  // 54
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty55], 		PosSplitLast, PosSplitAfter); 	  // 55
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty56], 		PosSplitLast, PosSplitAfter); 	  // 56
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty57], 		PosSplitLast, PosSplitAfter); 	  // 57
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty58], 		PosSplitLast, PosSplitAfter); 	  // 58
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty59], 		PosSplitLast, PosSplitAfter); 	  // 59
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty60], 		PosSplitLast, PosSplitAfter); 	  // 60
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty61], 		PosSplitLast, PosSplitAfter); 	  // 61
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty62], 		PosSplitLast, PosSplitAfter); 	  // 62
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty63], 		PosSplitLast, PosSplitAfter); 	  // 63
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty64], 		PosSplitLast, PosSplitAfter); 	  // 64
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty65], 		PosSplitLast, PosSplitAfter); 	  // 65
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty66], 		PosSplitLast, PosSplitAfter); 	  // 66
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty67], 		PosSplitLast, PosSplitAfter); 	  // 67
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty68], 		PosSplitLast, PosSplitAfter); 	  // 68
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty69], 		PosSplitLast, PosSplitAfter); 	  // 69
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty70], 		PosSplitLast, PosSplitAfter); 	  // 70
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty71], 		PosSplitLast, PosSplitAfter); 	  // 71
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty72], 		PosSplitLast, PosSplitAfter); 	  // 72
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty73], 		PosSplitLast, PosSplitAfter); 	  // 73
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty74], 		PosSplitLast, PosSplitAfter); 	  // 74
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty75], 		PosSplitLast, PosSplitAfter); 	  // 75
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty76], 		PosSplitLast, PosSplitAfter); 	  // 76
-		GetDataPlayersInt	(playerid, MyData, PlayersData[playerid][Empty77], 		PosSplitLast, PosSplitAfter); 	  // 77
-		
-		
-		format(DirBD, sizeof(DirBD), "%s%s.ulp", DIR_EMAILS, PlayersDataOnline[playerid][NameOnline]);
-		if ( fexist(DirBD) )
+		cache_get_value_name(0, "Email", PlayersData[playerid][Email], 60);
+		cache_get_value_name(0, "Password", PlayersData[playerid][Password], 25);
+		cache_get_value_name_int(0, "AccountState", PlayersData[playerid][AccountState]);
+		cache_get_value_name_float(0, "Spawn_X", PlayersData[playerid][Spawn_X]);
+		cache_get_value_name_float(0, "Spawn_Y", PlayersData[playerid][Spawn_Y]);
+		cache_get_value_name_float(0, "Spawn_Z", PlayersData[playerid][Spawn_Z]);
+		cache_get_value_name_float(0, "Spawn_ZZ", PlayersData[playerid][Spawn_ZZ]);
+		cache_get_value_name_int(0, "HoursPlaying", PlayersData[playerid][HoursPlaying]);
+		cache_get_value_name_int(0, "DeahtCount", PlayersData[playerid][DeahtCount]);
+
+		cache_get_value_name_int(0, "KilledCount", PlayersData[playerid][KilledCount]);
+		cache_get_value_name_int(0, "Phone", PlayersData[playerid][Phone]);
+		cache_get_value_name_int(0, "House", PlayersData[playerid][House]);
+		cache_get_value_name_int(0, "Car", PlayersData[playerid][Car]);
+		cache_get_value_name_int(0, "Faccion", PlayersData[playerid][Faccion]);
+		cache_get_value_name_int(0, "Rango", PlayersData[playerid][Rango]);
+		cache_get_value_name(0, "GirlFreind", PlayersData[playerid][GirlFreind], MAX_PLAYER_NAME);
+		cache_get_value_name_int(0, "Bolsillos0", PlayersData[playerid][Bolsillos][0]);
+		cache_get_value_name_int(0, "Bolsillos1", PlayersData[playerid][Bolsillos][1]);
+		cache_get_value_name_int(0, "Bolsillos2", PlayersData[playerid][Bolsillos][2]);
+
+		cache_get_value_name_int(0, "Bolsillos3", PlayersData[playerid][Bolsillos][3]);
+		cache_get_value_name_int(0, "Bolsillos4", PlayersData[playerid][Bolsillos][4]);
+		cache_get_value_name_int(0, "Habilidad", PlayersData[playerid][Habilidad]);
+		cache_get_value_name_int(0, "Warn", PlayersData[playerid][Warn]);
+		cache_get_value_name_int(0, "Ciudad", PlayersData[playerid][Ciudad]);
+		cache_get_value_name_float(0, "Vida", PlayersData[playerid][Vida]);
+		cache_get_value_name_float(0, "Chaleco", PlayersData[playerid][Chaleco]);
+		cache_get_value_name_int(0, "Cansansio", PlayersData[playerid][Cansansio]);
+		cache_get_value_name_int(0, "Dinero", PlayersData[playerid][Dinero]);
+		cache_get_value_name_int(0, "Banco", PlayersData[playerid][Banco]);
+
+		cache_get_value_name_int(0, "Jail", PlayersData[playerid][Jail]);
+		cache_get_value_name_int(0, "Admin", PlayersData[playerid][Admin]);
+		cache_get_value_name_int(0, "World", PlayersData[playerid][World]);
+		cache_get_value_name_int(0, "Interior", PlayersData[playerid][Interior]);
+		cache_get_value_name_int(0, "Skin", PlayersData[playerid][Skin]);
+		cache_get_value_name_int(0, "Drogas", PlayersData[playerid][Drogas]);
+		cache_get_value_name_int(0, "Materiales", PlayersData[playerid][Materiales]);
+		cache_get_value_name_int(0, "Lata", PlayersData[playerid][Lata]);
+		cache_get_value_name_int(0, "Ganzuas", PlayersData[playerid][Ganzuas]);
+		cache_get_value_name_int(0, "Alquiler", PlayersData[playerid][Alquiler]);
+
+		cache_get_value_name_int(0, "Bombas", PlayersData[playerid][Bombas]);
+		cache_get_value_name_int(0, "Sexo", PlayersData[playerid][Sexo]);
+		cache_get_value_name_int(0, "Idiomas0", PlayersData[playerid][Idiomas][0]);
+		cache_get_value_name_int(0, "Idiomas1", PlayersData[playerid][Idiomas][1]);
+		cache_get_value_name_int(0, "Idiomas2", PlayersData[playerid][Idiomas][2]);
+		cache_get_value_name_int(0, "Idiomas3", PlayersData[playerid][Idiomas][3]);
+		cache_get_value_name_int(0, "Idiomas4", PlayersData[playerid][Idiomas][4]);
+		cache_get_value_name_int(0, "Idiomas5", PlayersData[playerid][Idiomas][5]);
+		cache_get_value_name_int(0, "Licencias0", PlayersData[playerid][Licencias][0]);
+		cache_get_value_name_int(0, "Licencias1", PlayersData[playerid][Licencias][1]);
+
+		cache_get_value_name_int(0, "Licencias2", PlayersData[playerid][Licencias][2]);
+		cache_get_value_name_int(0, "Licencias3", PlayersData[playerid][Licencias][3]);
+		cache_get_value_name_int(0, "Licencias4", PlayersData[playerid][Licencias][4]);
+		cache_get_value_name_int(0, "Licencias5", PlayersData[playerid][Licencias][5]);
+		cache_get_value_name_int(0, "Licencias6", PlayersData[playerid][Licencias][6]);
+		cache_get_value_name_int(0, "IsInJail", PlayersData[playerid][IsInJail]);
+		cache_get_value_name_int(0, "Nacer", PlayersData[playerid][Nacer]);
+		cache_get_value_name_int(0, "TimeRequestBank", PlayersData[playerid][TimeRequestBank]);
+		cache_get_value_name_int(0, "MyBonus", PlayersData[playerid][MyBonus]);
+		cache_get_value_name_int(0, "InTutorial", PlayersData[playerid][InTutorial]);
+
+		cache_get_value_name_int(0, "Edad", PlayersData[playerid][Edad]);
+		cache_get_value_name_int(0, "IsPlayerInHouse", PlayersData[playerid][IsPlayerInHouse]);
+		cache_get_value_name_int(0, "TimeEquipo", PlayersData[playerid][TimeEquipo]);
+		cache_get_value_name_int(0, "SpawnAmigo", PlayersData[playerid][SpawnAmigo]);
+		cache_get_value_name_int(0, "IsPaga", PlayersData[playerid][IsPaga]);
+		cache_get_value_name(0, "MyIP", PlayersData[playerid][MyIP], 16);
+		cache_get_value_name_int(0, "Job", PlayersData[playerid][Job]);
+		cache_get_value_name_int(0, "MyStyleWalk", PlayersData[playerid][MyStyleWalk]);
+		cache_get_value_name_int(0, "Saldo", PlayersData[playerid][Saldo]);
+		cache_get_value_name_int(0, "LicenciaPesca", PlayersData[playerid][LicenciaPesca]);
+
+		cache_get_value_name_int(0, "IntermitentState", PlayersData[playerid][IntermitentState]);
+		cache_get_value_name_int(0, "MyStyleTalk", PlayersData[playerid][MyStyleTalk]);
+		cache_get_value_name_int(0, "IsPlayerInBizz", PlayersData[playerid][IsPlayerInBizz]);
+		cache_get_value_name_int(0, "IsPlayerInGarage", PlayersData[playerid][IsPlayerInGarage]);
+		cache_get_value_name(0, "WeaponS", WeaponsData, 50);
+		cache_get_value_name(0, "AmmoS", AmmoData, 50);
+		cache_get_value_name_int(0, "Asignados0", PlayersData[playerid][Asignados][0]);
+		cache_get_value_name_int(0, "Asignados1", PlayersData[playerid][Asignados][1]);
+		cache_get_value_name_int(0, "Asignados2", PlayersData[playerid][Asignados][2]);
+		cache_get_value_name_int(0, "Bolsa0", PlayersData[playerid][Bolsa][0]);
+
+		cache_get_value_name_int(0, "Bolsa1", PlayersData[playerid][Bolsa][1]);
+		cache_get_value_name_int(0, "Bolsa2", PlayersData[playerid][Bolsa][2]);
+		cache_get_value_name_int(0, "Bolsa3", PlayersData[playerid][Bolsa][3]);
+		cache_get_value_name_int(0, "BolsaC0", PlayersData[playerid][BolsaC][0]);
+		cache_get_value_name_int(0, "BolsaC1", PlayersData[playerid][BolsaC][1]);
+		cache_get_value_name_int(0, "BolsaC2", PlayersData[playerid][BolsaC][2]);
+		cache_get_value_name_int(0, "BolsaC3", PlayersData[playerid][BolsaC][3]);
+		cache_get_value_name_int(0, "HaveBolsa", PlayersData[playerid][HaveBolsa]);
+		cache_get_value_name_int(0, "IsPlayerInVehInt", PlayersData[playerid][IsPlayerInVehInt]);
+		cache_get_value_name_int(0, "Cartera0", PlayersData[playerid][Cartera][0]);
+
+		cache_get_value_name_int(0, "Cartera1", PlayersData[playerid][Cartera][1]);
+		cache_get_value_name_int(0, "Cartera2", PlayersData[playerid][Cartera][2]);
+		cache_get_value_name_int(0, "Cartera3", PlayersData[playerid][Cartera][3]);
+		cache_get_value_name_int(0, "Cartera4", PlayersData[playerid][Cartera][4]);
+		cache_get_value_name_int(0, "Cartera5", PlayersData[playerid][Cartera][5]);
+		cache_get_value_name_int(0, "CarteraC0", PlayersData[playerid][CarteraC][0]);
+		cache_get_value_name_int(0, "CarteraC1", PlayersData[playerid][CarteraC][1]);
+		cache_get_value_name_int(0, "CarteraC2", PlayersData[playerid][CarteraC][2]);
+		cache_get_value_name_int(0, "CarteraC3", PlayersData[playerid][CarteraC][3]);
+		cache_get_value_name_int(0, "CarteraC4", PlayersData[playerid][CarteraC][4]);
+
+		cache_get_value_name_int(0, "CarteraC5", PlayersData[playerid][CarteraC][5]);
+		cache_get_value_name_int(0, "CarteraT0", PlayersData[playerid][CarteraT][0]);
+		cache_get_value_name_int(0, "CarteraT1", PlayersData[playerid][CarteraT][1]);
+		cache_get_value_name_int(0, "CarteraT2", PlayersData[playerid][CarteraT][2]);
+		cache_get_value_name_int(0, "CarteraT3", PlayersData[playerid][CarteraT][3]);
+		cache_get_value_name_int(0, "CarteraT4", PlayersData[playerid][CarteraT][4]);
+		cache_get_value_name_int(0, "CarteraT5", PlayersData[playerid][CarteraT][5]);
+		cache_get_value_name_int(0, "AccountBankingOpen", PlayersData[playerid][AccountBankingOpen]);
+		cache_get_value_name_int(0, "CarteraI0", PlayersData[playerid][CarteraI][0]);
+		cache_get_value_name_int(0, "CarteraI1", PlayersData[playerid][CarteraI][1]);
+
+		cache_get_value_name_int(0, "CarteraI2", PlayersData[playerid][CarteraI][2]);
+		cache_get_value_name_int(0, "CarteraI3", PlayersData[playerid][CarteraI][3]);
+		cache_get_value_name_int(0, "CarteraI4", PlayersData[playerid][CarteraI][4]);
+		cache_get_value_name_int(0, "CarteraI5", PlayersData[playerid][CarteraI][5]);
+		cache_get_value_name_int(0, "IsPlayerInBank", PlayersData[playerid][IsPlayerInBank]);
+		cache_get_value_name_int(0, "AlertSMSBank", PlayersData[playerid][AlertSMSBank]);
+		cache_get_value_name_int(0, "HorasWork", PlayersData[playerid][HorasWork]);
+		cache_get_value_name_int(0, "CameraLogin", PlayersData[playerid][CameraLogin]);
+		cache_get_value_name_int(0, "Enfermedad", PlayersData[playerid][Enfermedad]);
+		cache_get_value_name_int(0, "Description", PlayersData[playerid][Description]);
+
+		cache_get_value_name_int(0, "EnableDescription", PlayersData[playerid][EnableDescription]);
+		cache_get_value_name(0, "DescriptionString", PlayersData[playerid][DescriptionString], MAX_TEXT_DESCRIPTION);
+		cache_get_value_name_int(0, "DescriptionColor", PlayersData[playerid][DescriptionColor]);
+		cache_get_value_name_int(0, "DescriptionSelect", PlayersData[playerid][DescriptionSelect]);
+		cache_get_value_name_int(0, "SpawnFac", PlayersData[playerid][SpawnFac]);
+		cache_get_value_name_int(0, "WantAudio", PlayersData[playerid][WantAudio]);
+		cache_get_value_name_int(0, "Objetos0", PlayersData[playerid][Objetos][0]);
+		cache_get_value_name_int(0, "Objetos1", PlayersData[playerid][Objetos][1]);
+		cache_get_value_name_int(0, "Objetos2", PlayersData[playerid][Objetos][2]);
+		cache_get_value_name_int(0, "Objetos3", PlayersData[playerid][Objetos][3]);
+
+		cache_get_value_name_int(0, "Objetos4", PlayersData[playerid][Objetos][4]);
+		cache_get_value_name_int(0, "Objetos5", PlayersData[playerid][Objetos][5]);
+		cache_get_value_name_int(0, "Objetos6", PlayersData[playerid][Objetos][6]);
+		cache_get_value_name_int(0, "Objetos7", PlayersData[playerid][Objetos][7]);
+		cache_get_value_name_int(0, "Objetos8", PlayersData[playerid][Objetos][8]);
+		cache_get_value_name_int(0, "ObjetosVision0", PlayersData[playerid][ObjetosVision][0]);
+		cache_get_value_name_int(0, "ObjetosVision1", PlayersData[playerid][ObjetosVision][1]);
+		cache_get_value_name_int(0, "ObjetosVision2", PlayersData[playerid][ObjetosVision][2]);
+		cache_get_value_name_int(0, "ObjetosVision3", PlayersData[playerid][ObjetosVision][3]);
+		cache_get_value_name_int(0, "ObjetosVision4", PlayersData[playerid][ObjetosVision][4]);
+
+		cache_get_value_name_int(0, "ObjetosVision5", PlayersData[playerid][ObjetosVision][5]);
+		cache_get_value_name_int(0, "ObjetosVision6", PlayersData[playerid][ObjetosVision][6]);
+		cache_get_value_name_int(0, "ObjetosVision7", PlayersData[playerid][ObjetosVision][7]);
+		cache_get_value_name_int(0, "ObjetosVision8", PlayersData[playerid][ObjetosVision][8]);
+		cache_get_value_name_int(0, "TypePhone", PlayersData[playerid][TypePhone]);
+
+		new SplitPos[2] = {0,0};
+		new GetAWeaponsData[13][10];
+		new GetAmmoData[13][10];
+        for(new i=0; i != 13; i++)
 		{
+            SplitPos[0] = strfind(WeaponsData, "|", false);
+            strmid(GetAWeaponsData[i], WeaponsData, 0, SplitPos[0]);
+            strdel(WeaponsData, 0, SplitPos[0]+1);
 
-		    LoadUser = fopen(DirBD, io_read);
-		    fread(LoadUser, MyData);
-			fclose(LoadUser);
+            SplitPos[1] = strfind(AmmoData, "|", false);
+            strmid(GetAmmoData[i], AmmoData, 0, SplitPos[1]);
+            strdel(AmmoData, 0, SplitPos[1]+1);
 
-			PosSplitAfter = strfind(MyData, "³", false, 0);
-			if ( PosSplitAfter != -1 )
-			{
-			    strmid(PlayersData[playerid][Email], MyData, 0,PosSplitAfter, sizeof(MyData));
-			    PlayersData[playerid][EmailTime] = strval(MyData[PosSplitAfter+1]);
-			}
-		}
-
-//		LoadEmail(playerid);
-	    return true;
+			PlayersData[playerid][WeaponS][i] = strval(GetAWeaponsData[i]);
+			PlayersData[playerid][AmmoS][i] = strval(GetAmmoData[i]);
+        }
 	}
-	else
-	{
-		return false;
-	}
+	cache_delete(cacheid);
+	return cuentaExiste;
 }
 //////////////////// SAVE
 public DataUserSave(playerid)
 {
-	new DirBD[50];
-	format(DirBD, sizeof(DirBD), "%s%s.ulp", DIR_USERS, PlayersDataOnline[playerid][NameOnline]);
-
 	if ( PlayersDataOnline[playerid][Spawn] )
 	{
         GetSpawnInfo(playerid);
     }
 
-//    PlayersData[playerid][HoursPlaying] = PlayersData[playerid][HoursPlaying] + ((gettime() - PlayersDataOnline[playerid][LoginTime]) / 60 );
+	new
+	string[10],
+	WeaponsData[50],
+	AmmoData[50];
 
-    new MyData[MAX_PLAYER_DATA];
-    format(MyData, sizeof(MyData),
-    "%i³%i³%s³%i³%f³%f³%f³%f³%i³%i³%i³%i³%i³%i³%i³%i³%s³%i³%i³%i³%i³%i³%i³%i³%i³%f³%f³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%s³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³",
-	PlayersData[playerid][Zero],
-	PlayersData[playerid][Empy],
-	PlayersData[playerid][Password],
-	PlayersData[playerid][AccountState],
-	PlayersData[playerid][Spawn_X],
-	PlayersData[playerid][Spawn_Y],
-    PlayersData[playerid][Spawn_Z],
-    PlayersData[playerid][Spawn_ZZ],
-    PlayersData[playerid][HoursPlaying],
-    PlayersData[playerid][DeahtCount],
-    PlayersData[playerid][KilledCount],
-    PlayersData[playerid][Phone],
-    PlayersData[playerid][House],
-    PlayersData[playerid][Car],
-    PlayersData[playerid][Faccion],
-    PlayersData[playerid][Rango],
-    PlayersData[playerid][GirlFreind],
-    PlayersData[playerid][Bolsillos][0],
-    PlayersData[playerid][Bolsillos][1],
-    PlayersData[playerid][Bolsillos][2],
-    PlayersData[playerid][Bolsillos][3],
-	PlayersData[playerid][Bolsillos][4],
-    PlayersData[playerid][Habilidad],
-    PlayersData[playerid][Warn],
-    PlayersData[playerid][Ciudad],
-    PlayersData[playerid][Vida],
-    PlayersData[playerid][Chaleco],
-    PlayersData[playerid][Cansansio],
-    PlayersData[playerid][Dinero],
-    PlayersData[playerid][Banco],
-    PlayersData[playerid][Jail],
-    PlayersData[playerid][Admin],
-    PlayersData[playerid][World],
-    PlayersData[playerid][Interior],
-    PlayersData[playerid][Skin],
-    PlayersData[playerid][Drogas],
-    PlayersData[playerid][Materiales],
-    PlayersData[playerid][Lata],
-    PlayersData[playerid][Ganzuas],
-    PlayersData[playerid][Alquiler],
-    PlayersData[playerid][Bombas],
-    PlayersData[playerid][Sexo],
-    PlayersData[playerid][Idiomas][0],
-    PlayersData[playerid][Idiomas][1],
-    PlayersData[playerid][Idiomas][2],
-    PlayersData[playerid][Idiomas][3],
-    PlayersData[playerid][Idiomas][4],
-    PlayersData[playerid][Idiomas][5],
-    PlayersData[playerid][Licencias][0],
-    PlayersData[playerid][Licencias][1],
-    PlayersData[playerid][Licencias][2],
-    PlayersData[playerid][Licencias][3],
-    PlayersData[playerid][Licencias][4],
-    PlayersData[playerid][Licencias][5],
-    PlayersData[playerid][Licencias][6],
-    PlayersData[playerid][IsInJail],
-    PlayersData[playerid][Nacer],
-    PlayersData[playerid][TimeRequestBank],
-    PlayersData[playerid][MyBonus],
-    PlayersData[playerid][InTutorial],
-    PlayersData[playerid][Edad],
-    PlayersData[playerid][IsPlayerInHouse],
-    PlayersData[playerid][TimeEquipo],
-    PlayersData[playerid][SpawnAmigo],
-    PlayersData[playerid][AmmoP],
-    PlayersData[playerid][IsPaga],
-    PlayersData[playerid][MyIP],
-	PlayersData[playerid][Job],
-	PlayersData[playerid][MyStyleWalk],
-	PlayersData[playerid][MyCarFaccion],
-	PlayersData[playerid][Saldo],
-	PlayersData[playerid][LicenciaPesca],
-	PlayersData[playerid][IntermitentState],
-	PlayersData[playerid][MyStyleSprint],
-	PlayersData[playerid][MyStyleTalk],
-	PlayersData[playerid][IsPlayerInBizz],
-	PlayersData[playerid][RingTone],
-	PlayersData[playerid][IsPlayerInGarage]
-    );
-	new File:SaveUser = fopen(DirBD, io_write);
-	fwrite(SaveUser, MyData);
-    format(MyData, sizeof(MyData),
-    "\r\n%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%s³%i³%i³%i³%i³",
-	    PlayersData[playerid][WeaponS][0],
-	    PlayersData[playerid][WeaponS][1],
-	    PlayersData[playerid][WeaponS][2],
-	    PlayersData[playerid][WeaponS][3],
-	    PlayersData[playerid][WeaponS][4],
-	    PlayersData[playerid][WeaponS][5],
-	    PlayersData[playerid][WeaponS][6],
-	    PlayersData[playerid][WeaponS][7],
-	    PlayersData[playerid][WeaponS][8],
-	    PlayersData[playerid][WeaponS][9],
-	    PlayersData[playerid][WeaponS][10],
-	    PlayersData[playerid][WeaponS][11],
-	    PlayersData[playerid][WeaponS][12],
-	    PlayersData[playerid][AmmoS][0],
-	    PlayersData[playerid][AmmoS][1],
-	    PlayersData[playerid][AmmoS][2],
-	    PlayersData[playerid][AmmoS][3],
-	    PlayersData[playerid][AmmoS][4],
-	    PlayersData[playerid][AmmoS][5],
-	    PlayersData[playerid][AmmoS][6],
-	    PlayersData[playerid][AmmoS][7],
-		PlayersData[playerid][AmmoS][8],
-	    PlayersData[playerid][AmmoS][9],
-	    PlayersData[playerid][AmmoS][10],
-	    PlayersData[playerid][AmmoS][11],
-	    PlayersData[playerid][AmmoS][12],
-	    PlayersData[playerid][Asignados][0],
-	    PlayersData[playerid][Asignados][1],
-	    PlayersData[playerid][Asignados][2],
-	    PlayersData[playerid][RingToneSMS],
-	    PlayersData[playerid][Bolsa][0],
-	    PlayersData[playerid][Bolsa][1],
-	    PlayersData[playerid][Bolsa][2],
-	    PlayersData[playerid][Bolsa][3],
-	    PlayersData[playerid][BolsaC][0],
-	    PlayersData[playerid][BolsaC][1],
-	    PlayersData[playerid][BolsaC][2],
-	    PlayersData[playerid][BolsaC][3],
-	    PlayersData[playerid][HaveBolsa],
-	    PlayersData[playerid][IsPlayerInVehInt],
-	    PlayersData[playerid][Cartera][0],
-	    PlayersData[playerid][Cartera][1],
-	    PlayersData[playerid][Cartera][2],
-	    PlayersData[playerid][Cartera][3],
-	    PlayersData[playerid][Cartera][4],
-	    PlayersData[playerid][Cartera][5],
-	    PlayersData[playerid][CarteraC][0],
-	    PlayersData[playerid][CarteraC][1],
-	    PlayersData[playerid][CarteraC][2],
-	    PlayersData[playerid][CarteraC][3],
-	    PlayersData[playerid][CarteraC][4],
-	    PlayersData[playerid][CarteraC][5],
-	    PlayersData[playerid][CarteraT][0],
-	    PlayersData[playerid][CarteraT][1],
-	    PlayersData[playerid][CarteraT][2],
-	    PlayersData[playerid][CarteraT][3],
-	    PlayersData[playerid][CarteraT][4],
-	    PlayersData[playerid][CarteraT][5],
+	for(new i=0; i<13; i++)
+	{
+		format(string,10,"%i|", PlayersData[playerid][WeaponS][i]);
+		strcat(WeaponsData, string);
+		format(string,10,"%i|", PlayersData[playerid][AmmoS][i]);
+		strcat(AmmoData, string);
+	}
+
+	new query[2000], Cache:cacheid, cuentaExiste, playerDBID;
+
+	mysql_format(dataBase, query, 200, "SELECT `ID` FROM `%s` WHERE `Nombre`='%e';", DIR_USERS, PlayersDataOnline[playerid][NameOnline]);
+	cacheid = mysql_query(dataBase, query);
+	cache_get_row_count(cuentaExiste);
+
+	if (cuentaExiste)
+	{
+		cache_get_value_name_int(0, "ID", playerDBID);
+	}
+	cache_delete(cacheid);
+
+	if (!cuentaExiste)
+	{
+	    mysql_format(dataBase, query, 200, "INSERT INTO `%s` (`Nombre`) VALUES ('%e');", DIR_USERS, PlayersDataOnline[playerid][NameOnline]);
+	    cacheid = mysql_query(dataBase, query);
+	    playerDBID = cache_insert_id();
+	    cache_delete(cacheid);
+	}
+
+	format(query, 100, "UPDATE `%s` SET ", DIR_USERS);
+	strcat(query, "`Nombre`='%e',`Email`='%e',`Password`='%e',`AccountState`='%i',`Spawn_X`='%f',`Spawn_Y`='%f',`Spawn_Z`='%f',`Spawn_ZZ`='%f',`HoursPlaying`='%i',`DeahtCount`='%i',");
+	strcat(query, "`KilledCount`='%i',`Phone`='%i',`House`='%i',`Car`='%i',`Faccion`='%i',`Rango`='%i',`GirlFreind`='%e',`Bolsillos0`='%i',`Bolsillos1`='%i',`Bolsillos2`='%i',");
+	strcat(query, "`Bolsillos3`='%i',`Bolsillos4`='%i',`Habilidad`='%i',`Warn`='%i',`Ciudad`='%i',`Vida`='%f',`Chaleco`='%f',`Cansansio`='%i',`Dinero`='%i',`Banco`='%i',");
+	strcat(query, "`Jail`='%i',`Admin`='%i',`World`='%i',`Interior`='%i',`Skin`='%i',`Drogas`='%i',`Materiales`='%i',`Lata`='%i',`Ganzuas`='%i',`Alquiler`='%i',");
+	strcat(query, "`Bombas`='%i',`Sexo`='%i',`Idiomas0`='%i',`Idiomas1`='%i',`Idiomas2`='%i',`Idiomas3`='%i',`Idiomas4`='%i',`Idiomas5`='%i',`Licencias0`='%i',`Licencias1`='%i',");
+	strcat(query, "`Licencias2`='%i',`Licencias3`='%i',`Licencias4`='%i',`Licencias5`='%i',`Licencias6`='%i',`IsInJail`='%i',`Nacer`='%i',`TimeRequestBank`='%i',`MyBonus`='%i',`InTutorial`='%i',");
+	strcat(query, "`Edad`='%i',`IsPlayerInHouse`='%i',`TimeEquipo`='%i',`SpawnAmigo`='%i',`IsPaga`='%i',`MyIP`='%s',`Job`='%i',`MyStyleWalk`='%i',`Saldo`='%i',`LicenciaPesca`='%i'");
+	strcat(query, " WHERE `ID`='%i';");
+
+	mysql_format(dataBase, query, 2000, query,
+		PlayersDataOnline[playerid][NameOnline],
+		PlayersData[playerid][Email],
+		PlayersData[playerid][Password],
+		PlayersData[playerid][AccountState],
+		PlayersData[playerid][Spawn_X],
+		PlayersData[playerid][Spawn_Y],
+		PlayersData[playerid][Spawn_Z],
+		PlayersData[playerid][Spawn_ZZ],
+		PlayersData[playerid][HoursPlaying],
+		PlayersData[playerid][DeahtCount],
+
+		PlayersData[playerid][KilledCount],
+		PlayersData[playerid][Phone],
+		PlayersData[playerid][House],
+		PlayersData[playerid][Car],
+		PlayersData[playerid][Faccion],
+		PlayersData[playerid][Rango],
+		PlayersData[playerid][GirlFreind],
+		PlayersData[playerid][Bolsillos][0],
+		PlayersData[playerid][Bolsillos][1],
+		PlayersData[playerid][Bolsillos][2],
+
+		PlayersData[playerid][Bolsillos][3],
+		PlayersData[playerid][Bolsillos][4],
+		PlayersData[playerid][Habilidad],
+		PlayersData[playerid][Warn],
+		PlayersData[playerid][Ciudad],
+		PlayersData[playerid][Vida],
+		PlayersData[playerid][Chaleco],
+		PlayersData[playerid][Cansansio],
+		PlayersData[playerid][Dinero],
+		PlayersData[playerid][Banco],
+
+		PlayersData[playerid][Jail],
+		PlayersData[playerid][Admin],
+		PlayersData[playerid][World],
+		PlayersData[playerid][Interior],
+		PlayersData[playerid][Skin],
+		PlayersData[playerid][Drogas],
+		PlayersData[playerid][Materiales],
+		PlayersData[playerid][Lata],
+		PlayersData[playerid][Ganzuas],
+		PlayersData[playerid][Alquiler],
+
+		PlayersData[playerid][Bombas],
+		PlayersData[playerid][Sexo],
+		PlayersData[playerid][Idiomas][0],
+		PlayersData[playerid][Idiomas][1],
+		PlayersData[playerid][Idiomas][2],
+		PlayersData[playerid][Idiomas][3],
+		PlayersData[playerid][Idiomas][4],
+		PlayersData[playerid][Idiomas][5],
+		PlayersData[playerid][Licencias][0],
+		PlayersData[playerid][Licencias][1],
+
+		PlayersData[playerid][Licencias][2],
+		PlayersData[playerid][Licencias][3],
+		PlayersData[playerid][Licencias][4],
+		PlayersData[playerid][Licencias][5],
+		PlayersData[playerid][Licencias][6],
+		PlayersData[playerid][IsInJail],
+		PlayersData[playerid][Nacer],
+		PlayersData[playerid][TimeRequestBank],
+		PlayersData[playerid][MyBonus],
+		PlayersData[playerid][InTutorial],
+
+		PlayersData[playerid][Edad],
+		PlayersData[playerid][IsPlayerInHouse],
+		PlayersData[playerid][TimeEquipo],
+		PlayersData[playerid][SpawnAmigo],
+		PlayersData[playerid][IsPaga],
+		PlayersData[playerid][MyIP],
+		PlayersData[playerid][Job],
+		PlayersData[playerid][MyStyleWalk],
+		PlayersData[playerid][Saldo],
+		PlayersData[playerid][LicenciaPesca],
+
+		playerDBID
+	);
+	mysql_query(dataBase, query, false);
+
+	format(query, 100, "UPDATE `%s` SET ", DIR_USERS);
+	strcat(query, "`IntermitentState`='%i',`MyStyleTalk`='%i',`IsPlayerInBizz`='%i',`IsPlayerInGarage`='%i',`WeaponS`='%s',`AmmoS`='%s',`Asignados0`='%i',`Asignados1`='%i',`Asignados2`='%i',`Bolsa0`='%i',");
+	strcat(query, "`Bolsa1`='%i',`Bolsa2`='%i',`Bolsa3`='%i',`BolsaC0`='%i',`BolsaC1`='%i',`BolsaC2`='%i',`BolsaC3`='%i',`HaveBolsa`='%i',`IsPlayerInVehInt`='%i',`Cartera0`='%i',");
+	strcat(query, "`Cartera1`='%i',`Cartera2`='%i',`Cartera3`='%i',`Cartera4`='%i',`Cartera5`='%i',`CarteraC0`='%i',`CarteraC1`='%i',`CarteraC2`='%i',`CarteraC3`='%i',`CarteraC4`='%i',");
+	strcat(query, "`CarteraC5`='%i',`CarteraT0`='%i',`CarteraT1`='%i',`CarteraT2`='%i',`CarteraT3`='%i',`CarteraT4`='%i',`CarteraT5`='%i',`AccountBankingOpen`='%i',`CarteraI0`='%i',`CarteraI1`='%i',");
+	strcat(query, "`CarteraI2`='%i',`CarteraI3`='%i',`CarteraI4`='%i',`CarteraI5`='%i',`IsPlayerInBank`='%i',`AlertSMSBank`='%i',`HorasWork`='%i',`CameraLogin`='%i',`Enfermedad`='%i',`Description`='%i',");
+	strcat(query, "`EnableDescription`='%i',`DescriptionString`='%e',`DescriptionColor`='%i',`DescriptionSelect`='%i',`SpawnFac`='%i',`WantAudio`='%i',`Objetos0`='%i',`Objetos1`='%i',`Objetos2`='%i',`Objetos3`='%i',");
+	strcat(query, "`Objetos4`='%i',`Objetos5`='%i',`Objetos6`='%i',`Objetos7`='%i',`Objetos8`='%i',`ObjetosVision0`='%i',`ObjetosVision1`='%i',`ObjetosVision2`='%i',`ObjetosVision3`='%i',`ObjetosVision4`='%i',");
+	strcat(query, "`ObjetosVision5`='%i',`ObjetosVision6`='%i',`ObjetosVision7`='%i',`ObjetosVision8`='%i',`TypePhone`='%i'");
+	strcat(query, " WHERE `ID`='%i';");
+
+	mysql_format(dataBase, query, 2000, query,
+		PlayersData[playerid][IntermitentState],
+		PlayersData[playerid][MyStyleTalk],
+		PlayersData[playerid][IsPlayerInBizz],
+		PlayersData[playerid][IsPlayerInGarage],
+		WeaponsData,
+		AmmoData,
+		PlayersData[playerid][Asignados][0],
+		PlayersData[playerid][Asignados][1],
+		PlayersData[playerid][Asignados][2],
+		PlayersData[playerid][Bolsa][0],
+
+		PlayersData[playerid][Bolsa][1],
+		PlayersData[playerid][Bolsa][2],
+		PlayersData[playerid][Bolsa][3],
+		PlayersData[playerid][BolsaC][0],
+		PlayersData[playerid][BolsaC][1],
+		PlayersData[playerid][BolsaC][2],
+		PlayersData[playerid][BolsaC][3],
+		PlayersData[playerid][HaveBolsa],
+		PlayersData[playerid][IsPlayerInVehInt],
+		PlayersData[playerid][Cartera][0],
+
+		PlayersData[playerid][Cartera][1],
+		PlayersData[playerid][Cartera][2],
+		PlayersData[playerid][Cartera][3],
+		PlayersData[playerid][Cartera][4],
+		PlayersData[playerid][Cartera][5],
+		PlayersData[playerid][CarteraC][0],
+		PlayersData[playerid][CarteraC][1],
+		PlayersData[playerid][CarteraC][2],
+		PlayersData[playerid][CarteraC][3],
+		PlayersData[playerid][CarteraC][4],
+
+		PlayersData[playerid][CarteraC][5],
+		PlayersData[playerid][CarteraT][0],
+		PlayersData[playerid][CarteraT][1],
+		PlayersData[playerid][CarteraT][2],
+		PlayersData[playerid][CarteraT][3],
+		PlayersData[playerid][CarteraT][4],
+		PlayersData[playerid][CarteraT][5],
 		PlayersData[playerid][AccountBankingOpen],
 		PlayersData[playerid][CarteraI][0],
 		PlayersData[playerid][CarteraI][1],
-	    PlayersData[playerid][CarteraI][2],
-	    PlayersData[playerid][CarteraI][3],
-	    PlayersData[playerid][CarteraI][4],
-	    PlayersData[playerid][CarteraI][5],
-	    PlayersData[playerid][IsPlayerInBank],
-	    PlayersData[playerid][AlertSMSBank],
-	    PlayersData[playerid][HorasWork],
-		PlayersData[playerid][Empty00],
+
+		PlayersData[playerid][CarteraI][2],
+		PlayersData[playerid][CarteraI][3],
+		PlayersData[playerid][CarteraI][4],
+		PlayersData[playerid][CarteraI][5],
+		PlayersData[playerid][IsPlayerInBank],
+		PlayersData[playerid][AlertSMSBank],
+		PlayersData[playerid][HorasWork],
 		PlayersData[playerid][CameraLogin],
 		PlayersData[playerid][Enfermedad],
 		PlayersData[playerid][Description],
+
 		PlayersData[playerid][EnableDescription],
 		PlayersData[playerid][DescriptionString],
 		PlayersData[playerid][DescriptionColor],
 		PlayersData[playerid][DescriptionSelect],
 		PlayersData[playerid][SpawnFac],
-		PlayersData[playerid][Empy_77]
-    );
-	fwrite(SaveUser, MyData);
-    format(MyData, sizeof(MyData),
-    "\r\n%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³%i³",
-	    PlayersData[playerid][WantAudio],
-	    PlayersData[playerid][Objetos][0],
-	    PlayersData[playerid][Objetos][1],
-	    PlayersData[playerid][Objetos][2],
-	    PlayersData[playerid][Objetos][3],
-	    PlayersData[playerid][Objetos][4],
-	    PlayersData[playerid][ObjetosVision][0],
-	    PlayersData[playerid][ObjetosVision][1],
-	    PlayersData[playerid][ObjetosVision][2],
-	    PlayersData[playerid][ObjetosVision][3],
-	    PlayersData[playerid][ObjetosVision][4],
-   	    PlayersData[playerid][TypePhone],
-	    PlayersData[playerid][ObjetosVision][5],
-	    PlayersData[playerid][ObjetosVision][6],
-   	    PlayersData[playerid][ObjetosVision][7],
-	    PlayersData[playerid][ObjetosVision][8],
-	    PlayersData[playerid][Objetos][5],
-   	    PlayersData[playerid][Objetos][6],
-	    PlayersData[playerid][Objetos][7],
-	    PlayersData[playerid][Objetos][8],
-   	    PlayersData[playerid][Empty20],
-	    PlayersData[playerid][Empty21],
-	    PlayersData[playerid][Empty22],
-   	    PlayersData[playerid][Empty23],
-	    PlayersData[playerid][Empty24],
-	    PlayersData[playerid][Empty25],
-   	    PlayersData[playerid][Empty26],
-	    PlayersData[playerid][Empty27],
-	    PlayersData[playerid][Empty28],
-   	    PlayersData[playerid][Empty29],
-	    PlayersData[playerid][Empty30],
-	    PlayersData[playerid][Empty31],
-   	    PlayersData[playerid][Empty32],
-	    PlayersData[playerid][Empty33],
-	    PlayersData[playerid][Empty34],
-   	    PlayersData[playerid][Empty35],
-	    PlayersData[playerid][Empty36],
-	    PlayersData[playerid][Empty37],
-   	    PlayersData[playerid][Empty38],
-	    PlayersData[playerid][Empty39],
-	    PlayersData[playerid][Empty40],
-   	    PlayersData[playerid][Empty41],
-	    PlayersData[playerid][Empty42],
-	    PlayersData[playerid][Empty43],
-   	    PlayersData[playerid][Empty44],
-	    PlayersData[playerid][Empty45],
-	    PlayersData[playerid][Empty46],
-   	    PlayersData[playerid][Empty47],
-	    PlayersData[playerid][Empty48],
-	    PlayersData[playerid][Empty49],
-	    PlayersData[playerid][Empty50],
-	    PlayersData[playerid][Empty51],
-	    PlayersData[playerid][Empty52],
-	    PlayersData[playerid][Empty53],
-	    PlayersData[playerid][Empty54],
-   	    PlayersData[playerid][Empty55],
-	    PlayersData[playerid][Empty56],
-	    PlayersData[playerid][Empty57],
-	    PlayersData[playerid][Empty58],
-   	    PlayersData[playerid][Empty59],
-	    PlayersData[playerid][Empty60],
-	    PlayersData[playerid][Empty61],
-	    PlayersData[playerid][Empty62],
-   	    PlayersData[playerid][Empty63],
-	    PlayersData[playerid][Empty64],
-	    PlayersData[playerid][Empty65],
-	    PlayersData[playerid][Empty66],
-   	    PlayersData[playerid][Empty67],
-	    PlayersData[playerid][Empty68],
-	    PlayersData[playerid][Empty69],
-	    PlayersData[playerid][Empty70],
-   	    PlayersData[playerid][Empty71],
-	    PlayersData[playerid][Empty72],
-	    PlayersData[playerid][Empty73],
-	    PlayersData[playerid][Empty74],
-   	    PlayersData[playerid][Empty75],
-	    PlayersData[playerid][Empty76],
-	    PlayersData[playerid][Empty77]
-    );
-	fwrite(SaveUser, MyData);
-	
-	fclose(SaveUser);
-	SaveEmail(playerid);
+		PlayersData[playerid][WantAudio],
+		PlayersData[playerid][Objetos][0],
+		PlayersData[playerid][Objetos][1],
+		PlayersData[playerid][Objetos][2],
+		PlayersData[playerid][Objetos][3],
+
+		PlayersData[playerid][Objetos][4],
+		PlayersData[playerid][Objetos][5],
+		PlayersData[playerid][Objetos][6],
+		PlayersData[playerid][Objetos][7],
+		PlayersData[playerid][Objetos][8],
+		PlayersData[playerid][ObjetosVision][0],
+		PlayersData[playerid][ObjetosVision][1],
+		PlayersData[playerid][ObjetosVision][2],
+		PlayersData[playerid][ObjetosVision][3],
+		PlayersData[playerid][ObjetosVision][4],
+
+		PlayersData[playerid][ObjetosVision][5],
+		PlayersData[playerid][ObjetosVision][6],
+		PlayersData[playerid][ObjetosVision][7],
+		PlayersData[playerid][ObjetosVision][8],
+		PlayersData[playerid][TypePhone],
+
+  		playerDBID
+	);
+	mysql_query(dataBase, query, false);
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 public GetSpawnInfo(playerid)
@@ -32864,7 +32600,7 @@ public GetPlayerStats(playerid, playeridshow)
 	);
 	SendInfoMessage(playeridshow, 1, StatsStrings, "Estadísticas: ");
 }
-/*public IsCheatMoney(playerid, lastmoney)
+public IsCheatMoney(playerid, lastmoney)
 {
 	if ( lastmoney > PlayersData[playerid][Dinero] )
 	{
@@ -32872,7 +32608,7 @@ public GetPlayerStats(playerid, playeridshow)
 	    format(MsgAviso, sizeof(MsgAviso), "%s AntiCheat-Money - %s[%i] posible cheat de money. Datos: Dinero encima: $%i Dinero AntiCheat: $%i.", LOGO_STAFF, PlayersDataOnline[playerid][NameOnline], playerid, lastmoney, PlayersData[playerid][Dinero]);
 	    MsgCheatsReportsToAdmins(MsgAviso);
     }
-}*/
+}
 public SendMessageRadioGeneral(playerid, text[])
 {
 	new MsgRadio[MAX_TEXT_CHAT];
@@ -33830,141 +33566,120 @@ public SetTimerGlobal()
 }
 public LoadDataVehicle(vehicleid, dir[], type)
 {
-	new DirBD[50];
-	format(DirBD, sizeof(DirBD), "%sC%i.dat", dir, vehicleid);
-	if ( fexist(DirBD) )
-	{
-	    new VehicleData[MAX_PLAYER_DATA];
-	    new VehicleSlots[MAX_VEHICLE_SLOT][50];
-		new File:LoadVehicle = fopen(DirBD, io_read);
-		fread(LoadVehicle, VehicleData);
+	new query [500], Cache:cacheid, vehicleExist;
+	format(query, 500, "SELECT * FROM `%s` WHERE `ID` = '%i';", dir, vehicleid);
+    cacheid =
+    mysql_query(dataBase, query);
+    cache_get_row_count(vehicleExist);
+    if (vehicleExist)
+    {
+        new ModelTemp;    cache_get_value_name_int(0, "Modelo", ModelTemp);
+        if ( type )
+		{
+			cache_get_value_name_float(0, "PosX", DataCars[vehicleid][PosX]);
+			cache_get_value_name_float(0, "PosY", DataCars[vehicleid][PosY]);
+			cache_get_value_name_float(0, "PosZ", DataCars[vehicleid][PosZ]);
+			cache_get_value_name_float(0, "PosZZ", DataCars[vehicleid][PosZZ]);
 
-		new PosSplitAfter = 0;
-		for ( new i = 0; i < MAX_VEHICLE_SLOT; i++ )
-		{
-			PosSplitAfter = strfind(VehicleData, ",", false);
-			strmid(VehicleSlots[i], VehicleData, 0, PosSplitAfter, sizeof(VehicleData));
-			strdel(VehicleData, 0, PosSplitAfter + 1);
-		}
-		new ModelTemp 						= strval(VehicleSlots[4]);
-		if ( type )
-		{
-			DataCars[vehicleid][PosX]		= floatstr(VehicleSlots[0]);
-			DataCars[vehicleid][PosY] 		= floatstr(VehicleSlots[1]);
-			DataCars[vehicleid][PosZ] 		= floatstr(VehicleSlots[2]);
-			DataCars[vehicleid][PosZZ]		= floatstr(VehicleSlots[3]);
-			
-			DataCars[vehicleid][Modelo]		= strval(VehicleSlots[4]);
-			
-			DataCars[vehicleid][Color1] 	= strval(VehicleSlots[5]);
-			DataCars[vehicleid][Color2] 	= strval(VehicleSlots[6]);
-			format(DataCars[vehicleid][Dueno], MAX_PLAYER_NAME, "%s", VehicleSlots[7]);
-		}
-		DataCars[vehicleid][Lock] 			= strval(VehicleSlots[8]);
-		if ( type )
-		{
-			DataCars[vehicleid][Time] 		= strval(VehicleSlots[9]);
-			DataCars[vehicleid][Matricula]	= strval(VehicleSlots[10]);
-			format(DataCars[vehicleid][MatriculaString], 32, "%s", VehicleSlots[10]);
-		}
-		DataCars[vehicleid][LockPolice]	= strval(VehicleSlots[11]);
-		format(DataCars[vehicleid][ReasonLock], 50, "%s", VehicleSlots[12]);
-		coches_Todos_Maleteros[vehicleid][0][0]	= strval(VehicleSlots[13]);
-		coches_Todos_Maleteros[vehicleid][0][1]	= strval(VehicleSlots[14]);
-		coches_Todos_Maleteros[vehicleid][1][0]	= strval(VehicleSlots[15]);
-		coches_Todos_Maleteros[vehicleid][1][1]	= strval(VehicleSlots[16]);
-		coches_Todos_Maleteros[vehicleid][2][0]	= strval(VehicleSlots[17]);
-		coches_Todos_Maleteros[vehicleid][2][1]	= strval(VehicleSlots[18]);
-		coches_Todos_Maleteros[vehicleid][3][0]	= strval(VehicleSlots[19]);
-		coches_Todos_Maleteros[vehicleid][3][1]	= strval(VehicleSlots[20]);
-		coches_Todos_Maleteros[vehicleid][4][0]	= strval(VehicleSlots[21]);
-		coches_Todos_Maleteros[vehicleid][4][1]	= strval(VehicleSlots[22]);
-		coches_Todos_Maleteros[vehicleid][5][0]	= strval(VehicleSlots[23]);
-		coches_Todos_Maleteros[vehicleid][5][1]	= strval(VehicleSlots[24]);
-		coches_Todos_Maleteros[vehicleid][6][0]	= strval(VehicleSlots[25]);
-		coches_Todos_Maleteros[vehicleid][6][1]	= strval(VehicleSlots[26]);
-		coches_Todos_Maleteros[vehicleid][7][0]	= strval(VehicleSlots[27]);
-		coches_Todos_Maleteros[vehicleid][8][0]	= strval(VehicleSlots[28]);
-		coches_Todos_Maleteros[vehicleid][9][0]	= strval(VehicleSlots[29]);
-		coches_Todos_Maleteros[vehicleid][10][0]= strval(VehicleSlots[30]);
-		coches_Todos_Maleteros[vehicleid][11][0]= strval(VehicleSlots[31]);
-		DataCars[vehicleid][MaleteroState]		= strval(VehicleSlots[32]);
-		DataCars[vehicleid][Oil]				= strval(VehicleSlots[33]);
-		DataCars[vehicleid][Gas]				= strval(VehicleSlots[34]);
-		DataCars[vehicleid][LastX]				= floatstr(VehicleSlots[35]);
-		DataCars[vehicleid][LastY]				= floatstr(VehicleSlots[36]);
-		DataCars[vehicleid][LastZ]				= floatstr(VehicleSlots[37]);
-		DataCars[vehicleid][LastZZ]				= floatstr(VehicleSlots[38]);
-		DataCars[vehicleid][IsLastSpawn]		= strval(VehicleSlots[39]);
-		DataCars[vehicleid][LastDamage]			= floatstr(VehicleSlots[40]);
-		DataCars[vehicleid][PanelS]				= strval(VehicleSlots[41]);
-		DataCars[vehicleid][DoorS]				= strval(VehicleSlots[42]);
-		DataCars[vehicleid][LightS]				= strval(VehicleSlots[43]);
-		DataCars[vehicleid][TiresS]				= strval(VehicleSlots[44]);
-		DataCars[vehicleid][SlotsTunning][0]	= strval(VehicleSlots[45]);
-		DataCars[vehicleid][SlotsTunning][1]	= strval(VehicleSlots[46]);
-		DataCars[vehicleid][SlotsTunning][2]	= strval(VehicleSlots[47]);
-		DataCars[vehicleid][SlotsTunning][3]	= strval(VehicleSlots[48]);
-		DataCars[vehicleid][SlotsTunning][4]	= strval(VehicleSlots[49]);
-		DataCars[vehicleid][SlotsTunning][5]	= strval(VehicleSlots[50]);
-		DataCars[vehicleid][SlotsTunning][6]	= strval(VehicleSlots[51]);
-		DataCars[vehicleid][SlotsTunning][7]	= strval(VehicleSlots[52]);
-		DataCars[vehicleid][SlotsTunning][8]	= strval(VehicleSlots[53]);
-		DataCars[vehicleid][SlotsTunning][9]	= strval(VehicleSlots[54]);
-		DataCars[vehicleid][SlotsTunning][10]	= strval(VehicleSlots[55]);
-		DataCars[vehicleid][SlotsTunning][11]	= strval(VehicleSlots[56]);
-		DataCars[vehicleid][SlotsTunning][12]	= strval(VehicleSlots[57]);
-		DataCars[vehicleid][SlotsTunning][13]	= strval(VehicleSlots[58]);
-		DataCars[vehicleid][Vinillo]			= strval(VehicleSlots[59]);
-		if ( type )
-		{
-			DataCars[vehicleid][Interior]			= strval(VehicleSlots[60]);
-		}
-		DataCars[vehicleid][InteriorLast]		= strval(VehicleSlots[61]);
-		if ( type )
-		{
-			DataCars[vehicleid][World]				= strval(VehicleSlots[62]);
-		}
-		DataCars[vehicleid][WorldLast]			= strval(VehicleSlots[63]);
-		
-		fread(LoadVehicle, VehicleData);
-		fclose(LoadVehicle);
+			cache_get_value_name_int(0, "Modelo", DataCars[vehicleid][Modelo]);
 
-		PosSplitAfter = 0;
-		for ( new i = 0; i < MAX_VEHICLE_SLOT; i++ )
-		{
-			PosSplitAfter = strfind(VehicleData, ",", false);
-			strmid(VehicleSlots[i], VehicleData, 0, PosSplitAfter, sizeof(VehicleData));
-			strdel(VehicleData, 0, PosSplitAfter + 1);
+			cache_get_value_name_int(0, "Color1", DataCars[vehicleid][Color1]);
+			cache_get_value_name_int(0, "Color2", DataCars[vehicleid][Color2]);
+            cache_get_value_name(0, "Dueno", DataCars[vehicleid][Dueno], MAX_PLAYER_NAME);
 		}
+        cache_get_value_name_int(0, "Seguro", DataCars[vehicleid][Lock]);
+		if ( type )
+		{
+			cache_get_value_name_int(0, "Time", DataCars[vehicleid][Time]);
+			cache_get_value_name_int(0, "Matricula", DataCars[vehicleid][Matricula]);
+			format(DataCars[vehicleid][MatriculaString], 32, "%s", DataCars[vehicleid][Matricula]);
+		}
+		cache_get_value_name_int(0, "LockPolice", DataCars[vehicleid][LockPolice]);
+		cache_get_value_name(0, "ReasonLock", DataCars[vehicleid][ReasonLock], 50);
+		cache_get_value_name_int(0, "Maletero_0_0", coches_Todos_Maleteros[vehicleid][0][0]);
+		cache_get_value_name_int(0, "Maletero_0_1", coches_Todos_Maleteros[vehicleid][0][1]);
+		cache_get_value_name_int(0, "Maletero_1_0", coches_Todos_Maleteros[vehicleid][1][0]);
+		cache_get_value_name_int(0, "Maletero_1_1", coches_Todos_Maleteros[vehicleid][1][1]);
+		cache_get_value_name_int(0, "Maletero_2_0", coches_Todos_Maleteros[vehicleid][2][0]);
+		cache_get_value_name_int(0, "Maletero_2_1", coches_Todos_Maleteros[vehicleid][2][1]);
+		cache_get_value_name_int(0, "Maletero_3_0", coches_Todos_Maleteros[vehicleid][3][0]);
+		cache_get_value_name_int(0, "Maletero_3_1", coches_Todos_Maleteros[vehicleid][3][1]);
+		cache_get_value_name_int(0, "Maletero_4_0", coches_Todos_Maleteros[vehicleid][4][0]);
+		cache_get_value_name_int(0, "Maletero_4_1", coches_Todos_Maleteros[vehicleid][4][1]);
+		cache_get_value_name_int(0, "Maletero_5_0", coches_Todos_Maleteros[vehicleid][5][0]);
+		cache_get_value_name_int(0, "Maletero_5_1", coches_Todos_Maleteros[vehicleid][5][1]);
+		cache_get_value_name_int(0, "Maletero_6_0", coches_Todos_Maleteros[vehicleid][6][0]);
+		cache_get_value_name_int(0, "Maletero_6_1", coches_Todos_Maleteros[vehicleid][6][1]);
+		cache_get_value_name_int(0, "Maletero_7", coches_Todos_Maleteros[vehicleid][7][0]);
+		cache_get_value_name_int(0, "Maletero_8", coches_Todos_Maleteros[vehicleid][8][0]);
+		cache_get_value_name_int(0, "Maletero_9", coches_Todos_Maleteros[vehicleid][9][0]);
+		cache_get_value_name_int(0, "Maletero_10", coches_Todos_Maleteros[vehicleid][10][0]);
+		cache_get_value_name_int(0, "Maletero_11", coches_Todos_Maleteros[vehicleid][11][0]);
+  		cache_get_value_name_int(0, "MaleteroState", DataCars[vehicleid][MaleteroState]);
+		cache_get_value_name_int(0, "Oil", DataCars[vehicleid][Oil]);
+		cache_get_value_name_int(0, "Gas", DataCars[vehicleid][Gas]);
+		cache_get_value_name_float(0, "LastX", DataCars[vehicleid][LastX]);
+		cache_get_value_name_float(0, "LastY", DataCars[vehicleid][LastY]);
+		cache_get_value_name_float(0, "LastZ", DataCars[vehicleid][LastZ]);
+		cache_get_value_name_float(0, "LastZZ", DataCars[vehicleid][LastZZ]);
+		cache_get_value_name_int(0, "IsLastSpawn", DataCars[vehicleid][IsLastSpawn]);
+		cache_get_value_name_float(0, "LastDamage", DataCars[vehicleid][LastDamage]);
+		cache_get_value_name_int(0, "PanelS", DataCars[vehicleid][PanelS]);
+		cache_get_value_name_int(0, "DoorS", DataCars[vehicleid][DoorS]);
+		cache_get_value_name_int(0, "LightS", DataCars[vehicleid][LightS]);
+		cache_get_value_name_int(0, "TiresS", DataCars[vehicleid][TiresS]);
+		cache_get_value_name_int(0, "SlotsTunning_0", DataCars[vehicleid][SlotsTunning][0]);
+		cache_get_value_name_int(0, "SlotsTunning_1", DataCars[vehicleid][SlotsTunning][1]);
+		cache_get_value_name_int(0, "SlotsTunning_2", DataCars[vehicleid][SlotsTunning][2]);
+		cache_get_value_name_int(0, "SlotsTunning_3", DataCars[vehicleid][SlotsTunning][3]);
+		cache_get_value_name_int(0, "SlotsTunning_4", DataCars[vehicleid][SlotsTunning][4]);
+		cache_get_value_name_int(0, "SlotsTunning_5", DataCars[vehicleid][SlotsTunning][5]);
+		cache_get_value_name_int(0, "SlotsTunning_6", DataCars[vehicleid][SlotsTunning][6]);
+		cache_get_value_name_int(0, "SlotsTunning_7", DataCars[vehicleid][SlotsTunning][7]);
+		cache_get_value_name_int(0, "SlotsTunning_8", DataCars[vehicleid][SlotsTunning][8]);
+		cache_get_value_name_int(0, "SlotsTunning_9", DataCars[vehicleid][SlotsTunning][9]);
+		cache_get_value_name_int(0, "SlotsTunning_10", DataCars[vehicleid][SlotsTunning][10]);
+		cache_get_value_name_int(0, "SlotsTunning_11", DataCars[vehicleid][SlotsTunning][11]);
+		cache_get_value_name_int(0, "SlotsTunning_12", DataCars[vehicleid][SlotsTunning][12]);
+		cache_get_value_name_int(0, "SlotsTunning_13", DataCars[vehicleid][SlotsTunning][13]);
+		cache_get_value_name_int(0, "Vinillo", DataCars[vehicleid][Vinillo]);
+		if ( type )
+		{
+			cache_get_value_name_int(0, "Interior", DataCars[vehicleid][Interior]);
+		}
+		cache_get_value_name_int(0, "InteriorLast", DataCars[vehicleid][InteriorLast]);
+		if ( type )
+		{
+			cache_get_value_name_int(0, "World", DataCars[vehicleid][World]);
+		}
+		cache_get_value_name_int(0, "WorldLast", DataCars[vehicleid][WorldLast]);
 		
-		DataCars[vehicleid][StationID]				= strval(VehicleSlots[0]);
-		DataCars[vehicleid][VolumenVehicle]			= strval(VehicleSlots[1]);
-		DataCars[vehicleid][EcualizadorVehicle][0]	= strval(VehicleSlots[2]);
-		DataCars[vehicleid][EcualizadorVehicle][1]	= strval(VehicleSlots[3]);
-		DataCars[vehicleid][EcualizadorVehicle][2]	= strval(VehicleSlots[4]);
-		DataCars[vehicleid][EcualizadorVehicle][3]	= strval(VehicleSlots[5]);
-		DataCars[vehicleid][EcualizadorVehicle][4]	= strval(VehicleSlots[6]);
-		DataCars[vehicleid][EcualizadorVehicle][5]	= strval(VehicleSlots[7]);
-		DataCars[vehicleid][EcualizadorVehicle][6]	= strval(VehicleSlots[8]);
-		DataCars[vehicleid][EcualizadorVehicle][7]	= strval(VehicleSlots[9]);
-		DataCars[vehicleid][EcualizadorVehicle][8]	= strval(VehicleSlots[10]);
-		
-		DataCars[vehicleid][GuanteraLock]			= strval(VehicleSlots[11]);
-		DataCars[vehicleid][GuanteraObjects][0]		= strval(VehicleSlots[12]);
-		DataCars[vehicleid][GuanteraObjects][1]		= strval(VehicleSlots[13]);
-		DataCars[vehicleid][GuanteraObjects][2]		= strval(VehicleSlots[14]);
-		DataCars[vehicleid][GuanteraObjects][3]		= strval(VehicleSlots[15]);
-		DataCars[vehicleid][GuanteraObjects][4]		= strval(VehicleSlots[16]);
-		DataCars[vehicleid][GuanteraObjects][5]		= strval(VehicleSlots[17]);
-		DataCars[vehicleid][GuanteraObjects][6]		= strval(VehicleSlots[18]);
-		DataCars[vehicleid][GuanteraObjects][7]		= strval(VehicleSlots[19]);
+		cache_get_value_name_int(0, "StationID", DataCars[vehicleid][StationID]);
+		cache_get_value_name_int(0, "VolumenVehicle", DataCars[vehicleid][VolumenVehicle]);
+		cache_get_value_name_int(0, "EcualizadorVehicle_0", DataCars[vehicleid][EcualizadorVehicle][0]);
+		cache_get_value_name_int(0, "EcualizadorVehicle_1", DataCars[vehicleid][EcualizadorVehicle][1]);
+		cache_get_value_name_int(0, "EcualizadorVehicle_2", DataCars[vehicleid][EcualizadorVehicle][2]);
+		cache_get_value_name_int(0, "EcualizadorVehicle_3", DataCars[vehicleid][EcualizadorVehicle][3]);
+		cache_get_value_name_int(0, "EcualizadorVehicle_4", DataCars[vehicleid][EcualizadorVehicle][4]);
+		cache_get_value_name_int(0, "EcualizadorVehicle_5", DataCars[vehicleid][EcualizadorVehicle][5]);
+		cache_get_value_name_int(0, "EcualizadorVehicle_6", DataCars[vehicleid][EcualizadorVehicle][6]);
+		cache_get_value_name_int(0, "EcualizadorVehicle_7", DataCars[vehicleid][EcualizadorVehicle][7]);
+		cache_get_value_name_int(0, "EcualizadorVehicle_8", DataCars[vehicleid][EcualizadorVehicle][8]);
 
+		cache_get_value_name_int(0, "GuanteraLock", DataCars[vehicleid][GuanteraLock]);
+		cache_get_value_name_int(0, "GuanteraObjects_0", DataCars[vehicleid][GuanteraObjects][0]);
+		cache_get_value_name_int(0, "GuanteraObjects_1", DataCars[vehicleid][GuanteraObjects][1]);
+		cache_get_value_name_int(0, "GuanteraObjects_2", DataCars[vehicleid][GuanteraObjects][2]);
+		cache_get_value_name_int(0, "GuanteraObjects_3", DataCars[vehicleid][GuanteraObjects][3]);
+		cache_get_value_name_int(0, "GuanteraObjects_4", DataCars[vehicleid][GuanteraObjects][4]);
+		cache_get_value_name_int(0, "GuanteraObjects_5", DataCars[vehicleid][GuanteraObjects][5]);
+		cache_get_value_name_int(0, "GuanteraObjects_6", DataCars[vehicleid][GuanteraObjects][6]);
+		cache_get_value_name_int(0, "GuanteraObjects_7", DataCars[vehicleid][GuanteraObjects][7]);
 
 		DataCars[vehicleid][VehicleDeath]		= false;
 		DataCars[vehicleid][Puente]				= true;
 		DataCars[vehicleid][StateEncendido] 	= false;
-		
+
 		if ( !type )
 		{
 		    if ( ModelTemp != DataCars[vehicleid][Modelo] )
@@ -33975,18 +33690,23 @@ public LoadDataVehicle(vehicleid, dir[], type)
 				CleanTunningSlots(vehicleid);
 		    }
 		}
-		return true;
-	}
-	return false;
+    }
+    cache_delete(cacheid);
+    return vehicleExist;
 }
 public SaveDataVehicle(vehicleid, dir[])
 {
-	new DirBD[50];
-	format(DirBD, sizeof(DirBD), "%sC%i.dat", dir, vehicleid);
+	new query[2000];
+    /*//Utilizado para guardar los vehiculos de Scriptfiles
+	format(query, 2000, "INSERT INTO `%s` (`ID`,`Modelo`) VALUES ('%i','%i');", dir, vehicleid, DataCars[vehicleid][Modelo]);
+	mysql_query(dataBase, query, false);
+	*/
 
-    new DataVehicle[MAX_PLAYER_DATA];
-    format(DataVehicle, sizeof(DataVehicle),
-    "%f,%f,%f,%f,%i,%i,%i,%s,%i,%i,%i,%i,%s,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%f,%f,%f,%f,%i,%f,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,",
+    format(query, 2000, "UPDATE `%s` SET ", dir);
+	strcat(query, "`PosX`='%f',`PosY`='%f',`PosZ`='%f',`PosZZ`='%f',`Modelo`='%i',`Color1`='%i',`Color2`='%i',`Dueno`='%e',");
+	strcat(query, "`Seguro`='%i',`Time`='%i',`Matricula`='%i',`LockPolice`='%i',`ReasonLock`='%e'");
+	strcat(query, " WHERE `ID`='%i';");
+	mysql_format(dataBase, query, 2000, query,
 		DataCars[vehicleid][PosX],
 		DataCars[vehicleid][PosY],
 		DataCars[vehicleid][PosZ],
@@ -34000,6 +33720,22 @@ public SaveDataVehicle(vehicleid, dir[])
 		DataCars[vehicleid][Matricula],
 		DataCars[vehicleid][LockPolice],
 		DataCars[vehicleid][ReasonLock],
+		vehicleid);
+	mysql_query(dataBase, query, false);
+
+	format(query, 2000, "UPDATE `%s` SET ", dir);
+	strcat(query, "`Maletero_0_0`='%i',`Maletero_0_1`='%i',`Maletero_1_0`='%i',`Maletero_1_1`='%i',`Maletero_2_0`='%i',`Maletero_2_1`='%i',`Maletero_3_0`='%i',`Maletero_3_1`='%i',");
+	strcat(query, "`Maletero_4_0`='%i',`Maletero_4_1`='%i',`Maletero_5_0`='%i',`Maletero_5_1`='%i',`Maletero_6_0`='%i',`Maletero_6_1`='%i',");
+	strcat(query, "`Maletero_7`='%i',`Maletero_8`='%i',`Maletero_9`='%i',`Maletero_10`='%i',`Maletero_11`='%i',`MaleteroState`='%i',`Oil`='%i',`Gas`='%i',");
+	strcat(query, "`LastX`='%f',`LastY`='%f',`LastZ`='%f',`LastZZ`='%f',`IsLastSpawn`='%i',`LastDamage`='%f',`PanelS`='%i',`DoorS`='%i',`LightS`='%i',`TiresS`='%i',");
+	strcat(query, "`SlotsTunning_0`='%i',`SlotsTunning_1`='%i',`SlotsTunning_2`='%i',`SlotsTunning_3`='%i',`SlotsTunning_4`='%i',`SlotsTunning_5`='%i',`SlotsTunning_6`='%i',");
+	strcat(query, "`SlotsTunning_7`='%i',`SlotsTunning_8`='%i',`SlotsTunning_9`='%i',`SlotsTunning_10`='%i',`SlotsTunning_11`='%i',`SlotsTunning_12`='%i',`SlotsTunning_13`='%i',");
+	strcat(query, "`Vinillo`='%i',`Interior`='%i',`InteriorLast`='%i',`World`='%i',`WorldLast`='%i',`StationID`='%i',`VolumenVehicle`='%i',`EcualizadorVehicle_0`='%i',");
+	strcat(query, "`EcualizadorVehicle_1`='%i',`EcualizadorVehicle_2`='%i',`EcualizadorVehicle_3`='%i',`EcualizadorVehicle_4`='%i',`EcualizadorVehicle_5`='%i',");
+	strcat(query, "`EcualizadorVehicle_6`='%i',`EcualizadorVehicle_7`='%i',`EcualizadorVehicle_8`='%i',`GuanteraLock`='%i',`GuanteraObjects_0`='%i',`GuanteraObjects_1`='%i',");
+	strcat(query, "`GuanteraObjects_2`='%i',`GuanteraObjects_3`='%i',`GuanteraObjects_4`='%i',`GuanteraObjects_5`='%i',`GuanteraObjects_6`='%i',`GuanteraObjects_7`='%i'");
+	strcat(query, " WHERE `ID`='%i';");
+	mysql_format(dataBase, query, 2000, query,
 		coches_Todos_Maleteros[vehicleid][0][0],
 		coches_Todos_Maleteros[vehicleid][0][1],
 		coches_Todos_Maleteros[vehicleid][1][0],
@@ -34050,12 +33786,7 @@ public SaveDataVehicle(vehicleid, dir[])
 		DataCars[vehicleid][Interior],
 		DataCars[vehicleid][InteriorLast],
 		DataCars[vehicleid][World],
-		DataCars[vehicleid][WorldLast]
-    );
-	new File:SaveVehicle = fopen(DirBD, io_write);
-	fwrite(SaveVehicle, DataVehicle);
-    format(DataVehicle, sizeof(DataVehicle),
-    "\r\n%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,",
+		DataCars[vehicleid][WorldLast],
 		DataCars[vehicleid][StationID],
 		DataCars[vehicleid][VolumenVehicle],
 		DataCars[vehicleid][EcualizadorVehicle][0],
@@ -34075,10 +33806,9 @@ public SaveDataVehicle(vehicleid, dir[])
 		DataCars[vehicleid][GuanteraObjects][4],
 		DataCars[vehicleid][GuanteraObjects][5],
 		DataCars[vehicleid][GuanteraObjects][6],
-		DataCars[vehicleid][GuanteraObjects][7]
-    );
-	fwrite(SaveVehicle, DataVehicle);
-	fclose(SaveVehicle);
+		DataCars[vehicleid][GuanteraObjects][7],
+		vehicleid);
+	mysql_query(dataBase, query, false);
 }
 public IsPlayerInNearVehicle(playerid)
 {
@@ -50237,44 +49967,35 @@ public ActTextDrawBizz(bizzid)
 }
 public DataLoadBizz(bizzid)
 {
-	new DirBD[50];
-	format(DirBD, sizeof(DirBD), "%sN%i.ulp", DIR_NEGOCIOS, bizzid);
-	if ( fexist(DirBD) )
+	new query[1000], Cache:cacheid, negocioExiste;
+	mysql_format(dataBase, query, 100, "SELECT * FROM `%s` WHERE `ID`='%i';", DIR_NEGOCIOS, bizzid);
+	cacheid = mysql_query(dataBase, query);
+	cache_get_row_count(negocioExiste);
+
+	if ( negocioExiste )
 	{
-	    new BizzData[MAX_PLAYER_DATA];
-	    new BizzDataSlots[MAX_BIZZ_SLOTS][35];
-		new File:LoadBizzF = fopen(DirBD, io_read);
-		fread(LoadBizzF, BizzData);
-		fclose(LoadBizzF);
-		new PosSplitAfter = 0;
-		for ( new i = 0; i < MAX_BIZZ_SLOTS; i++ )
-		{
-			PosSplitAfter = strfind(BizzData, "³", false);
-			strmid(BizzDataSlots[i], BizzData, 0, PosSplitAfter, sizeof(BizzData));
-			strdel(BizzData, 0, PosSplitAfter + 1);
-		}
-		// DATA BIZZ
-	    NegociosData[bizzid][PosOutX] 		= floatstr(BizzDataSlots[1]);
-	    NegociosData[bizzid][PosOutY] 		= floatstr(BizzDataSlots[2]);
-	    NegociosData[bizzid][PosOutZ] 		= floatstr(BizzDataSlots[3]);
-	    NegociosData[bizzid][PosOutZZ] 		= floatstr(BizzDataSlots[4]);
+	    cache_get_value_name_float(0, "PosOutX", NegociosData[bizzid][PosOutX]);
+	    cache_get_value_name_float(0, "PosOutY", NegociosData[bizzid][PosOutY]);
+	    cache_get_value_name_float(0, "PosOutZ", NegociosData[bizzid][PosOutZ]);
+	    cache_get_value_name_float(0, "PosOutZZ", NegociosData[bizzid][PosOutZZ]);
 	    NegociosData[bizzid][PickupOutId]	= CreatePickup	(1239, 	1, 	NegociosData[bizzid][PosOutX], NegociosData[bizzid][PosOutY], NegociosData[bizzid][PosOutZ], -1);
-	    NegociosData[bizzid][InteriorOut]	= strval(BizzDataSlots[5]);
-	    NegociosData[bizzid][Deposito]		= strval(BizzDataSlots[6]);
-	    NegociosData[bizzid][Precio]		= strval(BizzDataSlots[7]);
-	    NegociosData[bizzid][Lock]			= strval(BizzDataSlots[8]);
-	    NegociosData[bizzid][Type]			= strval(BizzDataSlots[9]);
-	    NegociosData[bizzid][PriceJoin]		= strval(BizzDataSlots[10]);
-	    NegociosData[bizzid][PricePiece] 	= strval(BizzDataSlots[11]);
-		format(NegociosData[bizzid][NameBizz], 	MAX_BIIZ_NAME, "%s", BizzDataSlots[12]);
-		format(NegociosData[bizzid][Dueno],		MAX_PLAYER_NAME, "%s", BizzDataSlots[13]);
-		format(NegociosData[bizzid][Extorsion], MAX_PLAYER_NAME, "%s", BizzDataSlots[14]);
-		NegociosData[bizzid][Materiales]    = strval(BizzDataSlots[15]);
-		NegociosData[bizzid][DepositoExtorsion]  = strval(BizzDataSlots[16]);
-		NegociosData[bizzid][Level]  		= strval(BizzDataSlots[17]);
-		NegociosData[bizzid][Station]  		= strval(BizzDataSlots[18]);
+	    cache_get_value_name_int(0, "InteriorOut", NegociosData[bizzid][InteriorOut]);
+	    cache_get_value_name_int(0, "Deposito", NegociosData[bizzid][Deposito]);
+	    cache_get_value_name_int(0, "Precio", NegociosData[bizzid][Precio]);
+	    cache_get_value_name_int(0, "Seguro", NegociosData[bizzid][Lock]);
+	    cache_get_value_name_int(0, "Type", NegociosData[bizzid][Type]);
+	    cache_get_value_name_int(0, "PriceJoin", NegociosData[bizzid][PriceJoin]);
+	    cache_get_value_name_int(0, "PricePiece", NegociosData[bizzid][PricePiece]);
+		cache_get_value_name(0, "NameBizz", NegociosData[bizzid][NameBizz],   MAX_BIIZ_NAME);
+		cache_get_value_name(0, "Dueno", NegociosData[bizzid][Dueno],		  MAX_PLAYER_NAME);
+		cache_get_value_name(0, "Extorsion", NegociosData[bizzid][Extorsion], MAX_PLAYER_NAME);
+		cache_get_value_name_int(0, "Materiales", NegociosData[bizzid][Materiales]);
+		cache_get_value_name_int(0, "DepositoExtorsion", NegociosData[bizzid][DepositoExtorsion]);
+		cache_get_value_name_int(0, "Level", NegociosData[bizzid][Level]);
+		cache_get_value_name_int(0, "Station", NegociosData[bizzid][Station]);
 
 		NegociosData[bizzid][World]     	= bizzid;
+
 		NegociosTextDraws[bizzid] = TextDrawCreateEx(180.0, 300.0, "Empty");
 		TextDrawUseBox(NegociosTextDraws[bizzid], 1);
 		TextDrawBackgroundColor(NegociosTextDraws[bizzid], 0x000000FF);
@@ -50286,10 +50007,30 @@ public DataLoadBizz(bizzid)
 		CreateDynamicMapIconULP(NegociosData[bizzid][PosOutX], NegociosData[bizzid][PosOutY], NegociosData[bizzid][PosOutZ], NegociosType[NegociosData[bizzid][Type]][IdMapIcon]);
 
         ActTextDrawBizz(bizzid);
-		/*printf(    	"%i - %s³%f³%f³%f³%f³%i³%i³%i³%i³%i³%i³%i³%s³%s³%s³%i³%i",
-		bizzid,
-		BizzDataSlots[0],
-	    NegociosData[bizzid][PosOutX],
+	}
+	cache_delete(cacheid);
+	return negocioExiste;
+}
+public DataSaveBizz(bizzid, bool:update)
+{
+	new query[1000], Cache:cacheid, negocioExiste;
+	mysql_format(dataBase, query, 100, "SELECT * FROM `%s` WHERE `ID`='%i';", DIR_NEGOCIOS, bizzid);
+	cacheid = mysql_query(dataBase, query);
+	cache_get_row_count(negocioExiste);
+	cache_delete(cacheid);
+
+	if (!negocioExiste)
+	{
+		mysql_format(dataBase, query, 100, "INSERT INTO `%s` (`ID`) VALUES ('%i');", "negocios", bizzid);
+		mysql_query(dataBase, query, false);
+	}
+
+	format(query, 100, "UPDATE `%s` SET ", DIR_NEGOCIOS);
+	strcat(query, "`PosOutX`='%f',`PosOutY`='%f',`PosOutZ`='%f',`PosOutZZ`='%f',`InteriorOut`='%i',`Deposito`='%i',`Precio`='%i',`Seguro`='%i',`Type`='%i',`PriceJoin`='%i',");
+	strcat(query, "`PricePiece`='%i',`NameBizz`='%e',`Dueno`='%e',`Extorsion`='%e',`Materiales`='%i',`DepositoExtorsion`='%i',`Level`='%i',`Station`='%i'");
+	strcat(query, " WHERE `ID`='%i';");
+	mysql_format(dataBase, query, 1000, query,
+		NegociosData[bizzid][PosOutX],
 	    NegociosData[bizzid][PosOutY],
 	    NegociosData[bizzid][PosOutZ],
 	    NegociosData[bizzid][PosOutZZ],
@@ -50299,58 +50040,22 @@ public DataLoadBizz(bizzid)
 	    NegociosData[bizzid][Lock],
 	    NegociosData[bizzid][Type],
 	    NegociosData[bizzid][PriceJoin],
+
 	    NegociosData[bizzid][PricePiece],
 		NegociosData[bizzid][NameBizz],
 		NegociosData[bizzid][Dueno],
 		NegociosData[bizzid][Extorsion],
 		NegociosData[bizzid][Materiales],
-		NegociosData[bizzid][DepositoExtorsion]
-		);*/
-	    return true;
-	}
-	else
-	{
-	    return false;
-	}
-}
-public DataSaveBizz(bizzid, bool:update)
-{
-	new DirBD[50];
-	format(DirBD, sizeof(DirBD), "%sN%i.ulp", DIR_NEGOCIOS, bizzid);
-
-    new BizzData[MAX_PLAYER_DATA];
-    format(BizzData, sizeof(BizzData),
-    	"0³%f³%f³%f³%f³%i³%i³%i³%i³%i³%i³%i³%s³%s³%s³%i³%i³%i³",
-	    NegociosData[bizzid][PosOutX],  	//		00
-	    NegociosData[bizzid][PosOutY],		//      01
-	    NegociosData[bizzid][PosOutZ],		//      03
-	    NegociosData[bizzid][PosOutZZ],     //      04
-	    NegociosData[bizzid][InteriorOut],  //      05
-	    NegociosData[bizzid][Deposito],     //      06
-	    NegociosData[bizzid][Precio],       //      07
-	    NegociosData[bizzid][Lock],         //      08
-	    NegociosData[bizzid][Type],         //      09
-	    NegociosData[bizzid][PriceJoin],    //      10
-	    NegociosData[bizzid][PricePiece],   //      11
-		NegociosData[bizzid][NameBizz],     //      12
-		NegociosData[bizzid][Dueno],        //      13
-		NegociosData[bizzid][Extorsion],    //      14
-		NegociosData[bizzid][Materiales],   //      15
-		NegociosData[bizzid][DepositoExtorsion],  //      16
-		NegociosData[bizzid][Level],  		//      17
-		NegociosData[bizzid][Station]  		//      18
-    );
+		NegociosData[bizzid][DepositoExtorsion],
+		NegociosData[bizzid][Level],
+		NegociosData[bizzid][Station],
+		bizzid);
+	mysql_query(dataBase, query, false);
 
 	if ( update )
 	{
 		ActTextDrawBizz(bizzid);
 	}
-
-	// 0³2244.6292³-1664.8536³15.4766³340.1742³0³0³1000³1³9999³20³5³Ninguno³0³No³100³
-
-	new File:SaveBizz = fopen(DirBD, io_write);
-	fwrite(SaveBizz, BizzData);
-	fclose(SaveBizz);
 }
 public LoadDataBizzType()
 {
@@ -54555,221 +54260,127 @@ public LoadTypeHouse()
 	TypeHouse[MAX_HOUSE_TYPE][PickupId] = CreatePickup   (1239,    1,    TypeHouse[MAX_HOUSE_TYPE][PosX], TypeHouse[MAX_HOUSE_TYPE][PosY], TypeHouse[MAX_HOUSE_TYPE][PosZ], -1);
 
 }
+
 public LoadHouse(houseid)
 {
-	new DirBD[50];
-	format(DirBD, sizeof(DirBD), "%sH%i.ulp", DIR_HOUSES, houseid);
-	if ( fexist(DirBD) )
+	new query[100], Cache:cacheid, casaExiste;
+	format(query, 100, "SELECT * FROM `%s` WHERE ID=%i;", DIR_HOUSES, houseid);
+	cacheid = mysql_query(dataBase, query);
+	cache_get_row_count(casaExiste);
+
+	if (casaExiste)
 	{
+		new SplitPos[2] = 0;
+
 		HouseData[houseid][StationID]        = -1;
 		HouseData[houseid][VolumenHouse]     = DEFAULT_AUDIO_VOLUMEN;
-		
-	    new HouseDataRead[MAX_HOUSE_DATA];
-	    new HouseSlots[MAX_HOUSE_SLOT][30];
-		new File:LoadHouseF = fopen(DirBD, io_read);
-		fread(LoadHouseF, HouseDataRead);
 
-		new PosSplitAfter = 0;
-		for ( new i = 0; i < MAX_HOUSE_SLOT; i++ )
+		cache_get_value_name(0, "Dueno", HouseData[houseid][Dueno], MAX_PLAYER_NAME);
+		cache_get_value_name(0, "Armario", HouseData[houseid][ArmarioData], 500);
+		for(new a=0; a !=7; a++)
 		{
-			PosSplitAfter = strfind(HouseDataRead, ",", false);
-			strmid(HouseSlots[i], HouseDataRead, 0, PosSplitAfter, sizeof(HouseDataRead));
-			strdel(HouseDataRead, 0, PosSplitAfter + 1);
+		    new ArmarioDataPart[2][10];
+			SplitPos[0] = strfind(HouseData[houseid][ArmarioData], "|", false);
+			SplitPos[1] = strfind(HouseData[houseid][ArmarioData], ",", false);
+			strmid(ArmarioDataPart[0], HouseData[houseid][ArmarioData], 0, SplitPos[0]);
+			strmid(ArmarioDataPart[1], HouseData[houseid][ArmarioData], SplitPos[0]+1, SplitPos[1]);
+			strdel(HouseData[houseid][ArmarioData], 0, SplitPos[1]+1);
+
+			HouseData[houseid][ArmarioWeapon][a] = strval(ArmarioDataPart[0]);
+			HouseData[houseid][ArmarioAmmo][a]   = strval(ArmarioDataPart[1]);
 		}
-		HouseData[houseid][Empy_Bug] = strval(HouseSlots[0]);
-		format(HouseData[houseid][Dueno], MAX_PLAYER_NAME, "%s", HouseSlots[1]);
-		HouseData[houseid][ArmarioWeapon][0] = strval(HouseSlots[2]);
-		HouseData[houseid][ArmarioWeapon][1] = strval(HouseSlots[3]);
-		HouseData[houseid][ArmarioWeapon][2] = strval(HouseSlots[4]);
-		HouseData[houseid][ArmarioWeapon][3] = strval(HouseSlots[5]);
-		HouseData[houseid][ArmarioWeapon][4] = strval(HouseSlots[6]);
-		HouseData[houseid][ArmarioWeapon][5] = strval(HouseSlots[7]);
-		HouseData[houseid][ArmarioWeapon][6] = strval(HouseSlots[8]);
-		HouseData[houseid][ArmarioAmmo][0]	 = strval(HouseSlots[9]);
-		HouseData[houseid][ArmarioAmmo][1]	 = strval(HouseSlots[10]);
-		HouseData[houseid][ArmarioAmmo][2]   = strval(HouseSlots[11]);
-		HouseData[houseid][ArmarioAmmo][3] 	= strval(HouseSlots[12]);
-		HouseData[houseid][ArmarioAmmo][4] 	= strval(HouseSlots[13]);
-		HouseData[houseid][ArmarioAmmo][5] 	= strval(HouseSlots[14]);
-		HouseData[houseid][ArmarioAmmo][6] 	= strval(HouseSlots[15]);
-		HouseData[houseid][Chaleco] 		= floatstr(HouseSlots[16]);
-		HouseData[houseid][Drogas] 			= strval(HouseSlots[17]);
-		HouseData[houseid][Ganzuas] 		= strval(HouseSlots[18]);
-		HouseData[houseid][PosX] 			= floatstr(HouseSlots[19]);
-		HouseData[houseid][PosY] 			= floatstr(HouseSlots[20]);
-		HouseData[houseid][PosZ] 			= floatstr(HouseSlots[21]);
-		HouseData[houseid][PosZZ] 			= floatstr(HouseSlots[22]);
-		HouseData[houseid][Interior] 		= strval(HouseSlots[23]);
-		HouseData[houseid][TypeHouseId]		= strval(HouseSlots[24]);
-		HouseData[houseid][PickupId] 		= CreatePickup	(1273, 	1, 	HouseData[houseid][PosX], HouseData[houseid][PosY], HouseData[houseid][PosZ],	 	-1);
-		HouseData[houseid][PriceRent] 		= strval(HouseSlots[25]);
-		HouseData[houseid][Level] 			= strval(HouseSlots[26]);
-		HouseData[houseid][World] 			= houseid;
-		HouseData[houseid][Lock]            = strval(HouseSlots[27]);
-		HouseData[houseid][Price]           = strval(HouseSlots[28]);
-		HouseData[houseid][Bombas]			= strval(HouseSlots[29]);
-		HouseData[houseid][Deposito]		= strval(HouseSlots[30]);
-		HouseData[houseid][Materiales]		= strval(HouseSlots[31]);
-		HouseData[houseid][ArmarioLock]		= strval(HouseSlots[32]);
+		cache_get_value_name_float(0, "Chaleco", HouseData[houseid][Chaleco]);
+		cache_get_value_name_int(0, "Drogas", HouseData[houseid][Drogas]);
+		cache_get_value_name_int(0, "Ganzuas", HouseData[houseid][Ganzuas]);
+		cache_get_value_name_float(0, "PosX", HouseData[houseid][PosX]);
+		cache_get_value_name_float(0, "PosY", HouseData[houseid][PosY]);
+		cache_get_value_name_float(0, "PosZ", HouseData[houseid][PosZ]);
+		cache_get_value_name_float(0, "PosZZ", HouseData[houseid][PosZZ]);
+		cache_get_value_name_int(0, "Interior", HouseData[houseid][Interior]);
+		cache_get_value_name_int(0, "TypeHouseId", HouseData[houseid][TypeHouseId]);
+		HouseData[houseid][PickupId] = CreatePickup	(1273, 	1, 	HouseData[houseid][PosX], HouseData[houseid][PosY], HouseData[houseid][PosZ],	 	-1);
+		cache_get_value_name_int(0, "PriceRent", HouseData[houseid][PriceRent]);
+		cache_get_value_name_int(0, "Level", HouseData[houseid][Level]);
+		HouseData[houseid][World] = houseid;
+		cache_get_value_name_int(0, "Seguro", HouseData[houseid][Lock]);
+		cache_get_value_name_int(0, "Price", HouseData[houseid][Price]);
+		cache_get_value_name_int(0, "Bombas", HouseData[houseid][Bombas]);
+		cache_get_value_name_int(0, "Deposito", HouseData[houseid][Deposito]);
+		cache_get_value_name_int(0, "Materiales", HouseData[houseid][Materiales]);
+		cache_get_value_name_int(0, "ArmarioLock", HouseData[houseid][ArmarioLock]);
 
-		Garages[houseid][0][Xg]				= floatstr(HouseSlots[33]);
-		Garages[houseid][0][Yg]				= floatstr(HouseSlots[34]);
-		Garages[houseid][0][Zg]				= floatstr(HouseSlots[35]);
-		Garages[houseid][0][ZZg]			= floatstr(HouseSlots[36]);
-		Garages[houseid][0][XgIn]			= floatstr(HouseSlots[37]);
-		Garages[houseid][0][YgIn]			= floatstr(HouseSlots[38]);
-		Garages[houseid][0][ZgIn]			= floatstr(HouseSlots[39]);
-		Garages[houseid][0][ZZgIn]			= floatstr(HouseSlots[40]);
-		Garages[houseid][0][XgOut]			= floatstr(HouseSlots[41]);
-		Garages[houseid][0][YgOut]			= floatstr(HouseSlots[42]);
-		Garages[houseid][0][ZgOut]			= floatstr(HouseSlots[43]);
-		Garages[houseid][0][ZZgOut]			= floatstr(HouseSlots[44]);
-		Garages[houseid][0][LockIn]			= strval(HouseSlots[45]);
-		Garages[houseid][0][LockOut]		= strval(HouseSlots[46]);
-		Garages[houseid][0][TypeGarageE]	= strval(HouseSlots[47]);
-
-		Garages[houseid][1][Xg]				= floatstr(HouseSlots[48]);
-		Garages[houseid][1][Yg]				= floatstr(HouseSlots[49]);
-		Garages[houseid][1][Zg]				= floatstr(HouseSlots[50]);
-		Garages[houseid][1][ZZg]			= floatstr(HouseSlots[51]);
-		Garages[houseid][1][XgIn]			= floatstr(HouseSlots[52]);
-		Garages[houseid][1][YgIn]			= floatstr(HouseSlots[53]);
-		Garages[houseid][1][ZgIn]			= floatstr(HouseSlots[54]);
-		Garages[houseid][1][ZZgIn]			= floatstr(HouseSlots[55]);
-		Garages[houseid][1][XgOut]			= floatstr(HouseSlots[56]);
-		Garages[houseid][1][YgOut]			= floatstr(HouseSlots[57]);
-		Garages[houseid][1][ZgOut]			= floatstr(HouseSlots[58]);
-		Garages[houseid][1][ZZgOut]			= floatstr(HouseSlots[59]);
-		Garages[houseid][1][LockIn]			= strval(HouseSlots[60]);
-		Garages[houseid][1][LockOut]		= strval(HouseSlots[61]);
-		Garages[houseid][1][TypeGarageE]	= strval(HouseSlots[62]);
-
-		Garages[houseid][2][Xg]				= floatstr(HouseSlots[63]);
-		Garages[houseid][2][Yg]				= floatstr(HouseSlots[64]);
-		Garages[houseid][2][Zg]				= floatstr(HouseSlots[65]);
-		Garages[houseid][2][ZZg]			= floatstr(HouseSlots[66]);
-		Garages[houseid][2][XgIn]			= floatstr(HouseSlots[67]);
-		Garages[houseid][2][YgIn]			= floatstr(HouseSlots[68]);
-		Garages[houseid][2][ZgIn]			= floatstr(HouseSlots[69]);
-		Garages[houseid][2][ZZgIn]			= floatstr(HouseSlots[70]);
-		Garages[houseid][2][XgOut]			= floatstr(HouseSlots[71]);
-		Garages[houseid][2][YgOut]			= floatstr(HouseSlots[72]);
-		Garages[houseid][2][ZgOut]			= floatstr(HouseSlots[73]);
-		Garages[houseid][2][ZZgOut]			= floatstr(HouseSlots[74]);
-		Garages[houseid][2][LockIn]			= strval(HouseSlots[75]);
-		Garages[houseid][2][LockOut]		= strval(HouseSlots[76]);
-		Garages[houseid][2][TypeGarageE]	= strval(HouseSlots[77]);
-
-		fread(LoadHouseF, HouseDataRead);
-		
-		PosSplitAfter = 0;
-		for ( new i = 0; i < MAX_HOUSE_SLOT; i++ )
+		for(new garageid=0; garageid != MAX_GARAGE_FOR_HOUSE; garageid++)
 		{
-			PosSplitAfter = strfind(HouseDataRead, ",", false);
-			strmid(HouseSlots[i], HouseDataRead, 0, PosSplitAfter, sizeof(HouseDataRead));
-			strdel(HouseDataRead, 0, PosSplitAfter + 1);
+		    new
+		    GarageDIR[10],
+			GarageData[500],
+		    GarageDataPart[16][40];
+
+		    format(GarageDIR, 20, "Garage%i", garageid);
+		    cache_get_value_name(0, GarageDIR, GarageData, 500);
+            for(new g=0;  g!=16; g++)
+			{
+				SplitPos[0] = strfind(GarageData, "|", false);
+				strmid(GarageDataPart[g], GarageData, 0, SplitPos[0]);
+				strdel(GarageData, 0, SplitPos[0]+1);
+			}
+			Garages[houseid][garageid][Xg]          = floatstr(GarageDataPart[0]);
+			Garages[houseid][garageid][Yg]          = floatstr(GarageDataPart[1]);
+			Garages[houseid][garageid][Zg]          = floatstr(GarageDataPart[2]);
+			Garages[houseid][garageid][ZZg]         = floatstr(GarageDataPart[3]);
+			Garages[houseid][garageid][XgIn]        = floatstr(GarageDataPart[4]);
+			Garages[houseid][garageid][YgIn]        = floatstr(GarageDataPart[5]);
+			Garages[houseid][garageid][ZgIn]        = floatstr(GarageDataPart[6]);
+			Garages[houseid][garageid][ZZgIn]       = floatstr(GarageDataPart[7]);
+			Garages[houseid][garageid][XgOut]       = floatstr(GarageDataPart[8]);
+			Garages[houseid][garageid][YgOut]       = floatstr(GarageDataPart[9]);
+			Garages[houseid][garageid][ZgOut]       = floatstr(GarageDataPart[10]);
+			Garages[houseid][garageid][ZZgOut]      = floatstr(GarageDataPart[11]);
+			Garages[houseid][garageid][LockIn]      = strval(GarageDataPart[12]);
+			Garages[houseid][garageid][LockOut]     = strval(GarageDataPart[13]);
+			Garages[houseid][garageid][TypeGarageE] = strval(GarageDataPart[14]);
+			Garages[houseid][garageid][WorldG]      = strval(GarageDataPart[15]);
 		}
-
-		Garages[houseid][3][Xg]				= floatstr(HouseSlots[0]);
-		Garages[houseid][3][Yg]				= floatstr(HouseSlots[1]);
-		Garages[houseid][3][Zg]				= floatstr(HouseSlots[2]);
-		Garages[houseid][3][ZZg]			= floatstr(HouseSlots[3]);
-		Garages[houseid][3][XgIn]			= floatstr(HouseSlots[4]);
-		Garages[houseid][3][YgIn]			= floatstr(HouseSlots[5]);
-		Garages[houseid][3][ZgIn]			= floatstr(HouseSlots[6]);
-		Garages[houseid][3][ZZgIn]			= floatstr(HouseSlots[7]);
-		Garages[houseid][3][XgOut]			= floatstr(HouseSlots[8]);
-		Garages[houseid][3][YgOut]			= floatstr(HouseSlots[9]);
-		Garages[houseid][3][ZgOut]			= floatstr(HouseSlots[10]);
-		Garages[houseid][3][ZZgOut]			= floatstr(HouseSlots[11]);
-		Garages[houseid][3][LockIn]			= strval(HouseSlots[12]);
-		Garages[houseid][3][LockOut]		= strval(HouseSlots[13]);
-		Garages[houseid][3][TypeGarageE]	= strval(HouseSlots[14]);
-
-		Garages[houseid][4][Xg]				= floatstr(HouseSlots[15]);
-		Garages[houseid][4][Yg]				= floatstr(HouseSlots[16]);
-		Garages[houseid][4][Zg]				= floatstr(HouseSlots[17]);
-		Garages[houseid][4][ZZg]			= floatstr(HouseSlots[18]);
-		Garages[houseid][4][XgIn]			= floatstr(HouseSlots[19]);
-		Garages[houseid][4][YgIn]			= floatstr(HouseSlots[20]);
-		Garages[houseid][4][ZgIn]			= floatstr(HouseSlots[21]);
-		Garages[houseid][4][ZZgIn]			= floatstr(HouseSlots[22]);
-		Garages[houseid][4][XgOut]			= floatstr(HouseSlots[23]);
-		Garages[houseid][4][YgOut]			= floatstr(HouseSlots[24]);
-		Garages[houseid][4][ZgOut]			= floatstr(HouseSlots[25]);
-		Garages[houseid][4][ZZgOut]			= floatstr(HouseSlots[26]);
-		Garages[houseid][4][LockIn]			= strval(HouseSlots[27]);
-		Garages[houseid][4][LockOut]		= strval(HouseSlots[28]);
-		Garages[houseid][4][TypeGarageE]	= strval(HouseSlots[29]);
-
-		Garages[houseid][0][WorldG]			= strval(HouseSlots[30]);
-		Garages[houseid][1][WorldG]			= strval(HouseSlots[31]);
-		Garages[houseid][2][WorldG]			= strval(HouseSlots[32]);
-		Garages[houseid][3][WorldG]			= strval(HouseSlots[33]);
-		Garages[houseid][4][WorldG]			= strval(HouseSlots[34]);
-
-		format(HouseFriends[houseid][0][Name], MAX_PLAYER_NAME, "%s", HouseSlots[35]);
-		format(HouseFriends[houseid][1][Name], MAX_PLAYER_NAME, "%s", HouseSlots[36]);
-		format(HouseFriends[houseid][2][Name], MAX_PLAYER_NAME, "%s", HouseSlots[37]);
-		format(HouseFriends[houseid][3][Name], MAX_PLAYER_NAME, "%s", HouseSlots[38]);
-		format(HouseFriends[houseid][4][Name], MAX_PLAYER_NAME, "%s", HouseSlots[39]);
-
-		Refrigerador[houseid][Articulo][0] 	= strval(HouseSlots[40]);
-		Refrigerador[houseid][Articulo][1] 	= strval(HouseSlots[41]);
-		Refrigerador[houseid][Articulo][2] 	= strval(HouseSlots[42]);
-		Refrigerador[houseid][Articulo][3] 	= strval(HouseSlots[43]);
-		Refrigerador[houseid][Articulo][4] 	= strval(HouseSlots[44]);
-		Refrigerador[houseid][Articulo][5] 	= strval(HouseSlots[45]);
-		Refrigerador[houseid][Articulo][6] 	= strval(HouseSlots[46]);
-		Refrigerador[houseid][Articulo][7] 	= strval(HouseSlots[47]);
-		Refrigerador[houseid][Articulo][8] 	= strval(HouseSlots[48]);
-		Refrigerador[houseid][Articulo][9] 	= strval(HouseSlots[49]);
-		Refrigerador[houseid][Cantidad][0] 	= strval(HouseSlots[50]);
-		Refrigerador[houseid][Cantidad][1] 	= strval(HouseSlots[51]);
-		Refrigerador[houseid][Cantidad][2] 	= strval(HouseSlots[52]);
-		Refrigerador[houseid][Cantidad][3] 	= strval(HouseSlots[53]);
-		Refrigerador[houseid][Cantidad][4] 	= strval(HouseSlots[54]);
-		Refrigerador[houseid][Cantidad][5] 	= strval(HouseSlots[55]);
-		Refrigerador[houseid][Cantidad][6] 	= strval(HouseSlots[56]);
-		Refrigerador[houseid][Cantidad][7] 	= strval(HouseSlots[57]);
-		Refrigerador[houseid][Cantidad][8] 	= strval(HouseSlots[58]);
-		Refrigerador[houseid][Cantidad][9] 	= strval(HouseSlots[59]);
-
-
-		HouseData[houseid][RefrigeradorLock] = strval(HouseSlots[60]);
-		HouseData[houseid][StationID] 		 = strval(HouseSlots[61]);
-		HouseData[houseid][VolumenHouse] 	 = strval(HouseSlots[62]);
-		HouseData[houseid][EcualizadorHouse][0] = strval(HouseSlots[63]);
-		HouseData[houseid][EcualizadorHouse][1] = strval(HouseSlots[64]);
-		HouseData[houseid][EcualizadorHouse][2] = strval(HouseSlots[65]);
-		HouseData[houseid][EcualizadorHouse][3] = strval(HouseSlots[66]);
-		HouseData[houseid][EcualizadorHouse][4] = strval(HouseSlots[67]);
-		HouseData[houseid][EcualizadorHouse][5] = strval(HouseSlots[68]);
-		HouseData[houseid][EcualizadorHouse][6] = strval(HouseSlots[69]);
-		HouseData[houseid][EcualizadorHouse][7] = strval(HouseSlots[70]);
-		HouseData[houseid][EcualizadorHouse][8] = strval(HouseSlots[71]);
-
-		HouseData[houseid][GavetaLock]		  = strval(HouseSlots[72]);
-		HouseData[houseid][GavetaObjects][0]  = strval(HouseSlots[73]);
-		HouseData[houseid][GavetaObjects][1]  = strval(HouseSlots[74]);
-		HouseData[houseid][GavetaObjects][2]  = strval(HouseSlots[75]);
-		HouseData[houseid][GavetaObjects][3]  = strval(HouseSlots[76]);
-		HouseData[houseid][GavetaObjects][4]  = strval(HouseSlots[77]);
-		
-		fread(LoadHouseF, HouseDataRead);
-		fclose(LoadHouseF);
-
-		PosSplitAfter = 0;
-		for ( new i = 0; i < MAX_HOUSE_SLOT; i++ )
+		cache_get_value_name(0, "HouseFriend0", HouseFriends[houseid][0][Name], MAX_PLAYER_NAME);
+		cache_get_value_name(0, "HouseFriend1", HouseFriends[houseid][1][Name], MAX_PLAYER_NAME);
+		cache_get_value_name(0, "HouseFriend2", HouseFriends[houseid][2][Name], MAX_PLAYER_NAME);
+		cache_get_value_name(0, "HouseFriend3", HouseFriends[houseid][3][Name], MAX_PLAYER_NAME);
+		cache_get_value_name(0, "HouseFriend4", HouseFriends[houseid][4][Name], MAX_PLAYER_NAME);
+		cache_get_value_name(0, "Refrigerador", HouseData[houseid][RefrigeradorData], MAX_PLAYER_NAME);
+		for(new r=0; r !=MAX_REFRIGERADOR_SLOTS_COUNT; r++)
 		{
-			PosSplitAfter = strfind(HouseDataRead, ",", false);
-			strmid(HouseSlots[i], HouseDataRead, 0, PosSplitAfter, sizeof(HouseDataRead));
-			strdel(HouseDataRead, 0, PosSplitAfter + 1);
+		    new RefrigeradorDataSlot[2][10];
+			SplitPos[0] = strfind(HouseData[houseid][RefrigeradorData], "|", false);
+			SplitPos[1] = strfind(HouseData[houseid][RefrigeradorData], ",", false);
+			strmid(RefrigeradorDataSlot[0], HouseData[houseid][RefrigeradorData], 0, SplitPos[0]);
+			strmid(RefrigeradorDataSlot[1], HouseData[houseid][RefrigeradorData], SplitPos[0]+1, SplitPos[1]);
+			strdel(HouseData[houseid][RefrigeradorData], 0, SplitPos[1]+1);
+
+			Refrigerador[houseid][Articulo][r] 	= strval(RefrigeradorDataSlot[0]);
+			Refrigerador[houseid][Cantidad][r] 	= strval(RefrigeradorDataSlot[1]);
 		}
-		
-		HouseData[houseid][GavetaObjects][5]  = strval(HouseSlots[0]);
-		HouseData[houseid][GavetaObjects][6]  = strval(HouseSlots[1]);
-		HouseData[houseid][GavetaObjects][7]  = strval(HouseSlots[2]);
+		cache_get_value_name_int(0, "RefrigeradorLock", HouseData[houseid][RefrigeradorLock]);
+		cache_get_value_name_int(0, "StationID", HouseData[houseid][StationID]);
+		cache_get_value_name_int(0, "VolumenHouse", HouseData[houseid][VolumenHouse]);
+		cache_get_value_name(0, "EcualizadorHouse", HouseData[houseid][EcualizadorData], MAX_PLAYER_NAME);
+		for(new e=0; e !=9; e++)
+		{
+		    new EcualizadorDataIndex[2];
+			SplitPos[0] = strfind(HouseData[houseid][EcualizadorData], "|", false);
+			strmid(EcualizadorDataIndex, HouseData[houseid][EcualizadorData], 0, SplitPos[0]);
+			strdel(HouseData[houseid][EcualizadorData], 0, SplitPos[0]+1);
+
+			HouseData[houseid][EcualizadorHouse][e] = strval(EcualizadorDataIndex);
+		}
+		cache_get_value_name_int(0, "GavetaLock", HouseData[houseid][GavetaLock]);
+		cache_get_value_name_int(0, "GavetaObjects0", HouseData[houseid][GavetaObjects][0]);
+		cache_get_value_name_int(0, "GavetaObjects1", HouseData[houseid][GavetaObjects][1]);
+		cache_get_value_name_int(0, "GavetaObjects2", HouseData[houseid][GavetaObjects][2]);
+		cache_get_value_name_int(0, "GavetaObjects3", HouseData[houseid][GavetaObjects][3]);
+		cache_get_value_name_int(0, "GavetaObjects4", HouseData[houseid][GavetaObjects][4]);
+		cache_get_value_name_int(0, "GavetaObjects5", HouseData[houseid][GavetaObjects][5]);
+		cache_get_value_name_int(0, "GavetaObjects6", HouseData[houseid][GavetaObjects][6]);
+		cache_get_value_name_int(0, "GavetaObjects7", HouseData[houseid][GavetaObjects][7]);
 
 		CasasTextDraws[houseid] = TextDrawCreateEx(180.0, 300.0, "Empty");
 		TextDrawUseBox(CasasTextDraws[houseid], 1);
@@ -54780,197 +54391,135 @@ public LoadHouse(houseid)
 		TextDrawLetterSize(CasasTextDraws[houseid], 0.4 , 1.1);
 
 		ActTextDrawHouse(houseid);
-		return true;
 	}
-	return false;
+	cache_delete(cacheid);
+	return casaExiste;
 }
+
 public SaveHouse(houseid, bool:update)
 {
-	new DirBD[50];
-	format(DirBD, sizeof(DirBD), "%sH%i.ulp", DIR_HOUSES, houseid);
+	new query[1000], Cache:cacheid, casaExiste;
+	mysql_format(dataBase, query, 100, "SELECT `ID` FROM `%s` WHERE `ID`='%i';", DIR_HOUSES, houseid);
+	cacheid = mysql_query(dataBase, query);
+	cache_get_row_count(casaExiste);
+	cache_delete(cacheid);
 
-    new HouseDataALL[MAX_HOUSE_DATA];
- 	format(HouseDataALL, MAX_HOUSE_DATA, "%i,%s,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%f,%i,%i,%f,%f,%f,%f,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%i,",
-	HouseData[houseid][Empy_Bug],
-	HouseData[houseid][Dueno],
-	HouseData[houseid][ArmarioWeapon][0],
-	HouseData[houseid][ArmarioWeapon][1],
-	HouseData[houseid][ArmarioWeapon][2],
-	HouseData[houseid][ArmarioWeapon][3],
-	HouseData[houseid][ArmarioWeapon][4],
-	HouseData[houseid][ArmarioWeapon][5],
-	HouseData[houseid][ArmarioWeapon][6],
-	HouseData[houseid][ArmarioAmmo][0],
-	HouseData[houseid][ArmarioAmmo][1],
-	HouseData[houseid][ArmarioAmmo][2],
-	HouseData[houseid][ArmarioAmmo][3],
-	HouseData[houseid][ArmarioAmmo][4],
-	HouseData[houseid][ArmarioAmmo][5],
-	HouseData[houseid][ArmarioAmmo][6],
-	HouseData[houseid][Chaleco],
-	HouseData[houseid][Drogas],
-	HouseData[houseid][Ganzuas],
-	HouseData[houseid][PosX],
-	HouseData[houseid][PosY],
-	HouseData[houseid][PosZ],
-	HouseData[houseid][PosZZ],
-	HouseData[houseid][Interior],
-	HouseData[houseid][TypeHouseId],
-	HouseData[houseid][PriceRent],
-	HouseData[houseid][Level],
-	HouseData[houseid][Lock],
-	HouseData[houseid][Price],
-	HouseData[houseid][Bombas],
-	HouseData[houseid][Deposito],
-	HouseData[houseid][Materiales],
-	HouseData[houseid][ArmarioLock],
-	Garages[houseid][0][Xg],
-	Garages[houseid][0][Yg],
-	Garages[houseid][0][Zg],
-	Garages[houseid][0][ZZg],
-	Garages[houseid][0][XgIn],
-	Garages[houseid][0][YgIn],
-	Garages[houseid][0][ZgIn],
-	Garages[houseid][0][ZZgIn],
-	Garages[houseid][0][XgOut],
-	Garages[houseid][0][YgOut],
-	Garages[houseid][0][ZgOut],
-	Garages[houseid][0][ZZgOut],
-	Garages[houseid][0][LockIn],
-	Garages[houseid][0][LockOut],
-	Garages[houseid][0][TypeGarageE],
-	Garages[houseid][1][Xg],
-	Garages[houseid][1][Yg],
-	Garages[houseid][1][Zg],
-	Garages[houseid][1][ZZg],
-	Garages[houseid][1][XgIn],
-	Garages[houseid][1][YgIn],
-	Garages[houseid][1][ZgIn],
-	Garages[houseid][1][ZZgIn],
-	Garages[houseid][1][XgOut],
-	Garages[houseid][1][YgOut],
-	Garages[houseid][1][ZgOut],
-	Garages[houseid][1][ZZgOut],
-	Garages[houseid][1][LockIn],
-	Garages[houseid][1][LockOut],
-	Garages[houseid][1][TypeGarageE],
-	Garages[houseid][2][Xg],
-	Garages[houseid][2][Yg],
-	Garages[houseid][2][Zg],
-	Garages[houseid][2][ZZg],
-	Garages[houseid][2][XgIn],
-	Garages[houseid][2][YgIn],
-	Garages[houseid][2][ZgIn],
-	Garages[houseid][2][ZZgIn],
-	Garages[houseid][2][XgOut],
-	Garages[houseid][2][YgOut],
-	Garages[houseid][2][ZgOut],
-	Garages[houseid][2][ZZgOut],
-	Garages[houseid][2][LockIn],
-	Garages[houseid][2][LockOut],
-	Garages[houseid][2][TypeGarageE]
-	);
+	if (!casaExiste)
+	{
+		format(query, 100, "INSERT INTO `%s` (`ID`) VALUES ('%i');", DIR_HOUSES, houseid);
+		mysql_query(dataBase, query, false);
+	}
 
-	new File:SaveHouseF = fopen(DirBD, io_write);
-	fwrite(SaveHouseF, HouseDataALL);
+	new tempString[500];
 
-	format(HouseDataALL, MAX_HOUSE_DATA, "\r\n%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%i,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%i,%i,%i,%i,%i,%i,%i,%i,%s,%s,%s,%s,%s,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,%i,",
-	Garages[houseid][3][Xg],
-	Garages[houseid][3][Yg],
-	Garages[houseid][3][Zg],
-	Garages[houseid][3][ZZg],
-	Garages[houseid][3][XgIn],
-	Garages[houseid][3][YgIn],
-	Garages[houseid][3][ZgIn],
-	Garages[houseid][3][ZZgIn],
-	Garages[houseid][3][XgOut],
-	Garages[houseid][3][YgOut],
-	Garages[houseid][3][ZgOut],
-	Garages[houseid][3][ZZgOut],
-	Garages[houseid][3][LockIn],
-	Garages[houseid][3][LockOut],
-	Garages[houseid][3][TypeGarageE],
-	Garages[houseid][4][Xg],
-	Garages[houseid][4][Yg],
-	Garages[houseid][4][Zg],
-	Garages[houseid][4][ZZg],
-	Garages[houseid][4][XgIn],
-	Garages[houseid][4][YgIn],
-	Garages[houseid][4][ZgIn],
-	Garages[houseid][4][ZZgIn],
-	Garages[houseid][4][XgOut],
-	Garages[houseid][4][YgOut],
-	Garages[houseid][4][ZgOut],
-	Garages[houseid][4][ZZgOut],
-	Garages[houseid][4][LockIn],
-	Garages[houseid][4][LockOut],
-	Garages[houseid][4][TypeGarageE],
-	Garages[houseid][0][WorldG],
-	Garages[houseid][1][WorldG],
-	Garages[houseid][2][WorldG],
-	Garages[houseid][3][WorldG],
-	Garages[houseid][4][WorldG],
-	HouseFriends[houseid][0][Name],
-	HouseFriends[houseid][1][Name],
-	HouseFriends[houseid][2][Name],
-	HouseFriends[houseid][3][Name],
-	HouseFriends[houseid][4][Name],
-	Refrigerador[houseid][Articulo][0],
-	Refrigerador[houseid][Articulo][1],
-	Refrigerador[houseid][Articulo][2],
-	Refrigerador[houseid][Articulo][3],
-	Refrigerador[houseid][Articulo][4],
-	Refrigerador[houseid][Articulo][5],
-	Refrigerador[houseid][Articulo][6],
-	Refrigerador[houseid][Articulo][7],
-	Refrigerador[houseid][Articulo][8],
-	Refrigerador[houseid][Articulo][9],
-	Refrigerador[houseid][Cantidad][0],
-	Refrigerador[houseid][Cantidad][1],
-	Refrigerador[houseid][Cantidad][2],
-	Refrigerador[houseid][Cantidad][3],
-	Refrigerador[houseid][Cantidad][4],
-	Refrigerador[houseid][Cantidad][5],
-	Refrigerador[houseid][Cantidad][6],
-	Refrigerador[houseid][Cantidad][7],
-	Refrigerador[houseid][Cantidad][8],
-	Refrigerador[houseid][Cantidad][9],
-	HouseData[houseid][RefrigeradorLock],
-	HouseData[houseid][StationID],
-	HouseData[houseid][VolumenHouse],
-	HouseData[houseid][EcualizadorHouse][0],
-	HouseData[houseid][EcualizadorHouse][1],
-	HouseData[houseid][EcualizadorHouse][2],
-	HouseData[houseid][EcualizadorHouse][3],
-	HouseData[houseid][EcualizadorHouse][4],
-	HouseData[houseid][EcualizadorHouse][5],
-	HouseData[houseid][EcualizadorHouse][6],
-	HouseData[houseid][EcualizadorHouse][7],
-	HouseData[houseid][EcualizadorHouse][8],
-	HouseData[houseid][GavetaLock],
-	HouseData[houseid][GavetaObjects][0],
-	HouseData[houseid][GavetaObjects][1],
-	HouseData[houseid][GavetaObjects][2],
-	HouseData[houseid][GavetaObjects][3],
-	HouseData[houseid][GavetaObjects][4]
-	);
+	format(query, 100, "UPDATE `%s` SET ", DIR_HOUSES);
+	strcat(query, "`Dueno`='%e',`Armario`='");
+	for(new i=0; i != 7; i++)
+	{
+		format(tempString, 500, "%i|%i,", HouseData[houseid][ArmarioWeapon][i], HouseData[houseid][ArmarioAmmo][i]);
+		strcat(query, tempString, 1000);
+	}
+	strcat(query, "',`Chaleco`='%f',`Drogas`='%i',`Ganzuas`='%i',`PosX`='%f',`PosY`='%f',`PosZ`='%f',`PosZZ`='%f',`Interior`='%i',`TypeHouseId`='%i',");
+	strcat(query, "`PriceRent`='%i',`Level`='%i',`Seguro`='%i',`Price`='%i',`Bombas`='%i',`Deposito`='%i',`Materiales`='%i',`ArmarioLock`='%i',`HouseFriend0`='%e',`HouseFriend1`='%e'");
+	strcat(query, " WHERE `ID`='%i';");
+	mysql_format(dataBase, query, 1000, query,
+		HouseData[houseid][Dueno],
+		HouseData[houseid][Chaleco],
+		HouseData[houseid][Drogas],
+		HouseData[houseid][Ganzuas],
+		HouseData[houseid][PosX],
+		HouseData[houseid][PosY],
+		HouseData[houseid][PosZ],
+		HouseData[houseid][PosZZ],
+		HouseData[houseid][Interior],
+		HouseData[houseid][TypeHouseId],
 
-	fwrite(SaveHouseF, HouseDataALL);
+		HouseData[houseid][PriceRent],
+		HouseData[houseid][Level],
+		HouseData[houseid][Lock],
+		HouseData[houseid][Price],
+		HouseData[houseid][Bombas],
+		HouseData[houseid][Deposito],
+		HouseData[houseid][Materiales],
+		HouseData[houseid][ArmarioLock],
+		HouseFriends[houseid][0][Name],
+		HouseFriends[houseid][1][Name],
+
+		houseid);
+	mysql_query(dataBase, query, false);
+
+	format(query, 100, "UPDATE `%s` SET ", DIR_HOUSES);
+	strcat(query, "`HouseFriend2`='%e',`HouseFriend3`='%e',`HouseFriend4`='%e',`Refrigerador`='");
+	for(new i=0; i != 10; i++)
+	{
+		format(tempString, 100, "%i|%i,", Refrigerador[houseid][Articulo][i], Refrigerador[houseid][Cantidad][i]);
+		strcat(query, tempString, 1000);
+	}
+	strcat(query, "',`RefrigeradorLock`='%i',`StationID`='%i',`VolumenHouse`='%i',`EcualizadorHouse`='");
+	for(new i=0; i != 9; i++)
+	{
+		format(tempString, 100, "%i|", HouseData[houseid][EcualizadorHouse][i]);
+		strcat(query, tempString, 1000);
+	}
+	strcat(query, "',`GavetaLock`='%i',`GavetaObjects0`='%i',`GavetaObjects1`='%i',`GavetaObjects2`='%i',`GavetaObjects3`='%i',");
+	strcat(query, "`GavetaObjects4`='%i',`GavetaObjects5`='%i',`GavetaObjects6`='%i',`GavetaObjects7`='%i'");
+	strcat(query, " WHERE `ID`='%i';");
+	mysql_format(dataBase, query, 1000, query,
+
+		HouseFriends[houseid][2][Name],
+		HouseFriends[houseid][3][Name],
+		HouseFriends[houseid][4][Name],
+
+		HouseData[houseid][RefrigeradorLock],
+		HouseData[houseid][StationID],
+		HouseData[houseid][VolumenHouse],
+
+		HouseData[houseid][GavetaLock],
+		HouseData[houseid][GavetaObjects][0],
+		HouseData[houseid][GavetaObjects][1],
+		HouseData[houseid][GavetaObjects][2],
+		HouseData[houseid][GavetaObjects][3],
+
+		HouseData[houseid][GavetaObjects][4],
+		HouseData[houseid][GavetaObjects][5],
+		HouseData[houseid][GavetaObjects][6],
+		HouseData[houseid][GavetaObjects][7],
+
+		houseid);
+	mysql_query(dataBase, query, false);
 	
-	format(HouseDataALL, MAX_HOUSE_DATA, "\r\n%i,%i,%i,",
-	HouseData[houseid][GavetaObjects][5],
-	HouseData[houseid][GavetaObjects][6],
-	HouseData[houseid][GavetaObjects][7]
-	);
-
-	fwrite(SaveHouseF, HouseDataALL);
-	fclose(SaveHouseF);
+	for(new i=0; i != MAX_GARAGE_FOR_HOUSE; i++)
+	{
+		format(query, 100, "UPDATE `%s` SET `Garage%i`='", DIR_HOUSES, i);
+		format(tempString, 500, "%f|%f|%f|%f|%f|%f|%f|%f|%f|%f|%f|%f|%i|%i|%i|%i|",
+			Garages[houseid][i][Xg],
+			Garages[houseid][i][Yg],
+			Garages[houseid][i][Zg],
+			Garages[houseid][i][ZZg],
+			Garages[houseid][i][XgIn],
+			Garages[houseid][i][YgIn],
+			Garages[houseid][i][ZgIn],
+			Garages[houseid][i][ZZgIn],
+			Garages[houseid][i][XgOut],
+			Garages[houseid][i][YgOut],
+			Garages[houseid][i][ZgOut],
+			Garages[houseid][i][ZZgOut],
+			Garages[houseid][i][LockIn],
+			Garages[houseid][i][LockOut],
+			Garages[houseid][i][TypeGarageE],
+			Garages[houseid][i][WorldG]);
+		strcat(query, tempString, 1000);
+		format(tempString, 100, "' WHERE `ID`='%i';", houseid);
+		strcat(query, tempString, 1000);
+		mysql_query(dataBase, query, false);
+	}
 
 	if ( update )
 	{
 		ActTextDrawHouse(houseid);
 	}
 }
+
 public ActTextDrawHouse(houseid)
 {
 	new TextDrawHouseText[300];
@@ -56555,13 +56104,13 @@ public LoadTexDrawsTutorial()
 //		\xa6 = O Con tílde
 
 	// Ayuntamiento
-	SetTextDrawTutorial(0, "~B~Buenas! Te queremos presentar todo ~N~lo que es y somos ~l~Fonix ~r~Game Roleplay!~N~~W~Para eso, hemos preparado este corto tutorial y~N~darte una calurosa bienvenida!");
+	SetTextDrawTutorial(0, "~B~Buenas! Te queremos presentar todo ~N~lo que es y somos ~B~UN ~G~Player~N~~W~Para eso, hemos preparado este corto tutorial y~N~darte una calurosa bienvenida!");
 	// Camioneros
 	SetTextDrawTutorial(1, "En el servidor encontrar\x98s lo t\xa2pico y lo no t\xa2pico ~N~de servidores ~G~RolePlay~W~ como por ejemplo:~N~~B~-Interiores para cada Facci\xa6n~N~-Sub-Interiores dentro de los mismos~N~-Todos los sistemas desde 0~N~~W~Entre muchisimas otras cosas que usted mismo ~N~podr\x98 descubrir!");
 	// Taxis
 	SetTextDrawTutorial(2, "S\xa6lo pedimos que se respeten todas las reglas~N~del servidor, para eso le aconsejamos~N~que lea las reglas ~R~\"/Reglas\"~W~~N~y a la vez nos ayuda a ser un mejor servidor!");
 	// Taller
-	SetTextDrawTutorial(3, "Recuerde visitar el foro en: ~G~www.FonixGame.foroactivo.com ~W~donde ~N~ encontrar\x98 diversa informaci\xa6n ~N~para debatir");
+	SetTextDrawTutorial(3, "Recuerde visitar el foro en: ~G~"WEBPAGE" ~W~donde ~N~ encontrar\x98 diversa informaci\xa6n ~N~para debatir");
 	// CNN
 	SetTextDrawTutorial(4, "Al igual el foro es un medio muy t\xa2pico ~N~de encontrar un empleo, as\xa2 ~N~que no pierda el tiempo!");
 	// Detectives
@@ -58119,7 +57668,7 @@ public LoadTextDrawInfo()
     TextDrawInfo[MAX_TEXT_DRAW_INFO][PosInfoY] = -1672.9708;
     TextDrawInfo[MAX_TEXT_DRAW_INFO][PosInfoZ] = 14.0469;
     TextDrawInfo[MAX_TEXT_DRAW_INFO][PickupidTextInfo] = CreatePickup	(1239, 	1,  TextDrawInfo[MAX_TEXT_DRAW_INFO][PosInfoX], TextDrawInfo[MAX_TEXT_DRAW_INFO][PosInfoY], TextDrawInfo[MAX_TEXT_DRAW_INFO][PosInfoZ],	 	-1);
-	SetStyleTextDrawTextDrawInfo(MAX_TEXT_DRAW_INFO, "~G~Fonix ~Y~Game ~R~Roleplay");
+	SetStyleTextDrawTextDrawInfo(MAX_TEXT_DRAW_INFO, "~B~UN ~G~Player");
 
 	////////////////////////////////////////////////
 	MAX_TEXT_DRAW_INFO++;
@@ -60992,9 +60541,9 @@ public UpdateDamage(playerid, &Float:newdamage)
 		SetVehicleHealth(PlayersDataOnline[playerid][InCarId], DataCars[PlayersDataOnline[playerid][InCarId]][LastDamage]);
 		UpdateVehicleDamageStatus(PlayersDataOnline[playerid][InCarId], DataCars[PlayersDataOnline[playerid][InCarId]][PanelS], DataCars[PlayersDataOnline[playerid][InCarId]][DoorS], DataCars[PlayersDataOnline[playerid][InCarId]][LightS], DataCars[PlayersDataOnline[playerid][InCarId]][TiresS]);
 		newdamage = DataCars[PlayersDataOnline[playerid][InCarId]][LastDamage];
-/*		new MsgAviso[MAX_TEXT_CHAT];
+		new MsgAviso[MAX_TEXT_CHAT];
 		format(MsgAviso, sizeof(MsgAviso), "%s AntiCheat-Repair - %s[%i] posible cheat de repair vehicle. Datos: ID del vehículo %i", LOGO_STAFF, PlayersDataOnline[playerid][NameOnline], playerid, PlayersDataOnline[playerid][InCarId]);
-		MsgCheatsReportsToAdmins(MsgAviso);*/
+		MsgCheatsReportsToAdmins(MsgAviso);
 	}
 	else
 	{
@@ -61228,6 +60777,7 @@ public OnGameModeExitEx()
 	SaveGaragesExLock();
 
 	DestroyAllDynamicObjects();
+	mysql_close(dataBase);
 	print("___________________ GAMEMODE DESCARGADO CORRECTAMENTE! ___________________");
 	print("___________________ GAMEMODE DESCARGADO CORRECTAMENTE! ___________________");
 	print("___________________ GAMEMODE DESCARGADO CORRECTAMENTE! ___________________");
@@ -61245,7 +60795,7 @@ public ResetServer()
 	SendClientMessageToAll(COLOR_MESSAGES[2], ReasonReset);
    	SendClientMessageToAll(0x000000FF, " ");
 	SendClientMessageToAll(COLOR_MESSAGES[2], "{E6E6E6}Saludos Cordiales,");
-	SendClientMessageToAll(COLOR_MESSAGES[2], "{E6E6E6}Equipo de FonixGame.");
+	SendClientMessageToAll(COLOR_MESSAGES[2], "{E6E6E6}Equipo de Un Player.");
 	GameTextForAll( "~G~Servidor Reiniciando...~N~Por favor espere...", 6000, 0);
 }
 public ConfirmDeletedAllSMS(playerid)
@@ -61712,9 +61262,12 @@ public GetMyNextBizz()
 {
 	for (new i = 1; i < MAX_BIZZ_COUNT; i++)
 	{
-		new DirBD[50];
-		format(DirBD, sizeof(DirBD), "%sN%i.ulp", DIR_NEGOCIOS, i);
-		if ( !fexist(DirBD) )
+		new query[200], Cache:cacheid, negocioExiste;
+		mysql_format(dataBase, query, 200, "SELECT `ID` FROM `%s` WHERE `ID`='%i';", DIR_NEGOCIOS, i);
+		cacheid = mysql_query(dataBase, query);
+		cache_get_row_count(negocioExiste);
+		cache_delete(cacheid);
+		if ( !negocioExiste )
 		{
 		    return i;
 		}
@@ -61725,9 +61278,12 @@ public GetMyNextHouse()
 {
 	for (new i = 1; i < MAX_HOUSE_COUNT; i++)
 	{
-		new DirBD[50];
-		format(DirBD, sizeof(DirBD), "%sH%i.ulp", DIR_HOUSES, i);
-		if ( !fexist(DirBD) )
+	    new query[200], Cache:cacheid, casaExiste;
+		format(query, 200, "SELECT `ID` FROM `%s` WHERE `ID`=%i;", DIR_HOUSES, i);
+		cacheid = mysql_query(dataBase, query);
+		cache_get_row_count(casaExiste);
+		cache_delete(cacheid);
+		if ( !casaExiste )
 		{
 		    return i;
 		}
@@ -65456,7 +65012,7 @@ public ShowServerStats(playerid)
 		"\r\n{E6E6E6}22- MAX_OBJECT_FIJOS {00F50A}(%i)", MAX_OBJECT_FIJOS);
 		strcat(ListDialog, TempConvert, sizeof(ListDialog));
 
-		ShowPlayerDialogEx(playerid,999,DIALOG_STYLE_LIST,"{00A5FF}Estadísticas del servidor - FonixGame.foroactivo.com || RolePlay", ListDialog, "Ok", "");
+		ShowPlayerDialogEx(playerid,999,DIALOG_STYLE_LIST,"{00A5FF}Estadísticas del servidor - "WEBPAGE" || RolePlay", ListDialog, "Ok", "");
 	}
 	else
 	{
@@ -65820,14 +65376,18 @@ public ShowManejarCuentas(playerid)
 }
 public CreateAccountBank(playerid)
 {
-	new TempDir[50];
+	new query[200], Cache:cacheid, bankAccountExist, Go = true;
 	new AccountNumber;
 	do
 	{
 	    AccountNumber = random(8999999) + 1000000;
-		format(TempDir, sizeof(TempDir), "%s%i.ulp", DIR_ACCOUNT_BANK, AccountNumber);
+		format(query, 200, "SELECT * FROM `%s` WHERE `AccountNumber`=%i;", DIR_ACCOUNT_BANK, AccountNumber);
+		cacheid = mysql_query(dataBase, query);
+		cache_get_row_count(bankAccountExist);
+		cache_delete(cacheid);
+		if (!bankAccountExist) Go = false;
 	}
-	while( fexist(TempDir) );
+	while( Go );
 	PlayersData[playerid][AccountBankingOpen] = AccountNumber;
 
 	CleanPlayerAccountBank(playerid);
@@ -65873,45 +65433,38 @@ public LoadAccountBanking(playerid)
 {
     if ( PlayersData[playerid][AccountBankingOpen] )
     {
-		new TempDir[50];
-		new AccountBankData[700];
-		new AccountBankSlots[MAX_ACCOUNT_BANK_SLOT][MAX_PLAYER_NAME];
-		new File:LoadAccountBankF;
-		format(TempDir, sizeof(TempDir), "%s%i.ulp", DIR_ACCOUNT_BANK, PlayersData[playerid][AccountBankingOpen]);
-		if ( fexist(TempDir) )
+		new query[200], Cache:cacheid, bankAccountExist;
+		format(query, 200, "SELECT * FROM `%s` WHERE `AccountNumber`=%i", DIR_ACCOUNT_BANK, PlayersData[playerid][AccountBankingOpen]);
+		cacheid = mysql_query(dataBase, query);
+		cache_get_row_count(bankAccountExist);
+
+		if (bankAccountExist )
 		{
-
-		    LoadAccountBankF = fopen(TempDir, io_read);
-			fread(LoadAccountBankF, AccountBankData);
-			fclose(LoadAccountBankF);
-
-			new PosSplitAfter = 0;
-			for ( new b = 0; b < MAX_ACCOUNT_BANK_SLOT; b++ )
-			{
-				PosSplitAfter = strfind(AccountBankData, "³", false);
-				strmid(AccountBankSlots[b], AccountBankData, 0, PosSplitAfter, sizeof(AccountBankData));
-				strdel(AccountBankData, 0, PosSplitAfter + 1);
-			}
-
-			format(Banking[playerid][Owner], MAX_PLAYER_NAME, "%s", AccountBankSlots[0]);
-			Banking[playerid][Balance]			= strval(AccountBankSlots[1]);
-			Banking[playerid][LockIn]			= strval(AccountBankSlots[2]);
-			Banking[playerid][LockOut]			= strval(AccountBankSlots[3]);
-
-            new ConteoCC = 4;
+			new ChequesData[700];
+			cache_get_value_name(0, "Client", Banking[playerid][Owner], MAX_PLAYER_NAME);
+			cache_get_value_name_int(0, "Balance", Banking[playerid][Balance]);
+			cache_get_value_name_int(0, "LockIn", Banking[playerid][LockIn]);
+			cache_get_value_name_int(0, "LockOut", Banking[playerid][LockOut]);
+			cache_get_value_name(0, "Cheques", ChequesData, 700);
 		    for ( new c = 0; c < MAX_COUNT_CHEQUES; c++ )
 		    {
-				Cheques[playerid][c][UniqueID]      = strval(AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-				Cheques[playerid][c][Type]      = strval(AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-				format(Cheques[playerid][c][NombreCh], MAX_PLAYER_NAME, "%s", AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-				Cheques[playerid][c][Ammount]      = strval(AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-			}
+				new ChequeDataSlot[4][50], SplitPos[2];
+				SplitPos[1] = strfind(ChequesData, ",", false);
+				for ( new i = 0; i != 4; i++ )
+				{
+					SplitPos[0] = strfind(ChequesData, "|", false);
+					strmid(ChequeDataSlot[i], ChequesData, 0, SplitPos[0]);
+					strdel(ChequesData, 0, SplitPos[0]+1);
+				}
+				strdel(ChequesData, 0, SplitPos[1]+1);
 
+				Cheques[playerid][c][UniqueID] = strval(ChequeDataSlot[0]);
+				Cheques[playerid][c][Type]     = strval(ChequeDataSlot[1]);
+				format(Cheques[playerid][c][NombreCh], MAX_PLAYER_NAME, "%s", ChequeDataSlot[2]);
+				Cheques[playerid][c][Ammount]  = strval(ChequeDataSlot[3]);
+			}
 		}
+		cache_delete(cacheid);
 	}
 	else
 	{
@@ -65920,35 +65473,44 @@ public LoadAccountBanking(playerid)
 }
 public SaveAccountBanking(playerid)
 {
-	new AccountBankData[700];
-	new TempSave[60];
+	new query[1000], Cache:cacheid, bankAccountExist;
+	format(query, 500, "SELECT `AccountNumber` FROM `%s` WHERE `AccountNumber`=%i;", DIR_ACCOUNT_BANK, PlayersData[playerid][AccountBankingOpen]);
+	cacheid = mysql_query(dataBase, query);
+	cache_get_row_count(bankAccountExist);
+	cache_delete(cacheid);
 
-	format(TempSave, sizeof(TempSave), "%s³%i³%i³%i³",
-	PlayersDataOnline[playerid][NameOnline],
-	Banking[playerid][Balance],
-	Banking[playerid][LockIn],
-	Banking[playerid][LockOut]);
+	if (!bankAccountExist)
+	{
+		format(query, 500, "INSERT INTO `%s` (`AccountNumber`) VALUES ('%i');", DIR_ACCOUNT_BANK, PlayersData[playerid][AccountBankingOpen]);
+		mysql_query(dataBase, query, false);
+	}
 
-	strcat(AccountBankData, TempSave, sizeof(AccountBankData));
+	format(query, 500, "UPDATE `%s` SET ", DIR_ACCOUNT_BANK);
+	strcat(query, "`Client`='%e',`Balance`='%i',`LockIn`='%i',`LockOut`='%i'");
+	strcat(query, " WHERE `AccountNumber`=%i;");
+	mysql_format(dataBase, query, 500, query,
+		PlayersDataOnline[playerid][NameOnline],
+		Banking[playerid][Balance],
+		Banking[playerid][LockIn],
+		Banking[playerid][LockOut],
+		PlayersData[playerid][AccountBankingOpen]);
+	mysql_query(dataBase, query, false);
 
+	format(query, 100, "UPDATE `%s` SET `Cheques`='", DIR_ACCOUNT_BANK);
     for ( new c = 0; c < MAX_COUNT_CHEQUES; c++ )
     {
-		format(TempSave, sizeof(TempSave), "%i³%i³%s³%i³",
+		new chequesData[60];
+		format(chequesData, sizeof(chequesData), "%i|%i|%s|%i|,",
 		Cheques[playerid][c][UniqueID],
 		Cheques[playerid][c][Type],
 		Cheques[playerid][c][NombreCh],
 		Cheques[playerid][c][Ammount]);
-
-		strcat(AccountBankData, TempSave, sizeof(AccountBankData));
+		
+		strcat(query, chequesData, 1000);
 	}
-
-	new File:SaveAccountBankF;
-	new TempDir[50];
-	format(TempDir, sizeof(TempDir), "%s%i.ulp", DIR_ACCOUNT_BANK, PlayersData[playerid][AccountBankingOpen]);
-
-    SaveAccountBankF = fopen(TempDir, io_write);
-	fwrite(SaveAccountBankF, AccountBankData);
-	fclose(SaveAccountBankF);
+	strcat(query, "' WHERE `AccountNumber`=%i;");
+	mysql_format(dataBase, query, 1000, query, PlayersData[playerid][AccountBankingOpen]);
+	mysql_query(dataBase, query, false);
 }
 public IsPlayerAccountBankConnected(accountcheck)
 {
@@ -66133,50 +65695,38 @@ public PayCheckToPlayer(playerid, carteraid)
 	}
 	else
 	{
-		new TempDir[50];
-		format(TempDir, sizeof(TempDir), "%s%i.ulp", DIR_ACCOUNT_BANK, PlayersData[playerid][CarteraI][carteraid]);
-		if ( fexist(TempDir) )
+		new query[200], Cache:cacheid, bankAccountExist;
+		format(query, 200, "SELECT * FROM `%s` WHERE `AccountNumber`=%i", DIR_ACCOUNT_BANK, PlayersData[playerid][CarteraI][carteraid]);
+		cacheid = mysql_query(dataBase, query);
+		cache_get_row_count(bankAccountExist);
+		if ( bankAccountExist )
 		{
-			new AccountBankData[700];
-			new AccountBankSlots[MAX_ACCOUNT_BANK_SLOT][MAX_PLAYER_NAME];
-			new File:LoadAccountBankF;
 			new BankingPay[AccountBankEnum];
 			new ChequesPay[MAX_COUNT_CHEQUES][ChequesEnum];
-
-		    LoadAccountBankF = fopen(TempDir, io_read);
-			fread(LoadAccountBankF, AccountBankData);
-			fclose(LoadAccountBankF);
-
-			new PosSplitAfter = 0;
-			for ( new b = 0; b < MAX_ACCOUNT_BANK_SLOT; b++ )
-			{
-				PosSplitAfter = strfind(AccountBankData, "³", false);
-				strmid(AccountBankSlots[b], AccountBankData, 0, PosSplitAfter, sizeof(AccountBankData));
-				strdel(AccountBankData, 0, PosSplitAfter + 1);
-			}
-
-			format(BankingPay[Owner], MAX_PLAYER_NAME, "%s", AccountBankSlots[0]);
-			BankingPay[Balance]			= strval(AccountBankSlots[1]);
-			BankingPay[LockIn]			= strval(AccountBankSlots[2]);
-			BankingPay[LockOut]			= strval(AccountBankSlots[3]);
-
-            new ConteoCC = 4;
-		    for ( new c = 0; c < MAX_COUNT_CHEQUES; c++ )
+			new ChequesPayData[700];
+			cache_get_value_name(0, "Client", BankingPay[Owner], MAX_PLAYER_NAME);
+			cache_get_value_name_int(0, "Balance", BankingPay[Balance]);
+			cache_get_value_name_int(0, "LockIn", BankingPay[LockIn]);
+			cache_get_value_name_int(0, "LockOut", BankingPay[LockOut]);
+			cache_get_value_name(0, "Cheques", ChequesPayData, 700);
+		    for ( new chequeid = 0; chequeid < MAX_COUNT_CHEQUES; chequeid++ )
 		    {
-				ChequesPay[c][UniqueID]      = strval(AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-				ChequesPay[c][Type]      = strval(AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-				format(ChequesPay[c][NombreCh], MAX_PLAYER_NAME, "%s", AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-				ChequesPay[c][Ammount]      = strval(AccountBankSlots[ConteoCC]);
-				ConteoCC++;
+				new ChequePayDataSlot[4][50], SplitPos[2];
+				SplitPos[1] = strfind(ChequesPayData, ",", false);
+				for ( new i = 0; i != 4; i++ )
+				{
+					SplitPos[0] = strfind(ChequesPayData, "|", false);
+					strmid(ChequePayDataSlot[i], ChequesPayData, 0, SplitPos[0]);
+					strdel(ChequesPayData, 0, SplitPos[0]+1);
+				}
+				strdel(ChequesPayData, 0, SplitPos[1]+1);
+
+				ChequesPay[chequeid][UniqueID] = strval(ChequePayDataSlot[0]);
+				ChequesPay[chequeid][Type]     = strval(ChequePayDataSlot[1]);
+				format(ChequesPay[chequeid][NombreCh], MAX_PLAYER_NAME, "%s", ChequePayDataSlot[2]);
+				ChequesPay[chequeid][Ammount]  = strval(ChequePayDataSlot[3]);
 			}
 
-						/*
-					new BankingPay[AccountBankEnum];
-					new ChequesPay[MAX_COUNT_CHEQUES][ChequesEnum];*/
-		    ////////////////////////////
 		    new Cobrado = -1;
 		    for ( new c = 0; c < MAX_COUNT_CHEQUES; c++ )
 		    {
@@ -66213,30 +65763,32 @@ public PayCheckToPlayer(playerid, carteraid)
 							RemoveObjectToCartera(playerid, carteraid);
 
 							/////////////////////////
-							new TempSave[60];
-							format(TempSave, sizeof(TempSave), "%s³%i³%i³%i³",
-							BankingPay[Owner],
-							BankingPay[Balance],
-							BankingPay[LockIn],
-							BankingPay[LockOut]);
+							format(query, 500, "UPDATE `%s` SET ", DIR_ACCOUNT_BANK);
+							strcat(query, "`Client`='%e',`Balance`='%i',`LockIn`='%i',`LockOut`='%i'");
+							strcat(query, " WHERE `AccountNumber`=%i;");
+							mysql_format(dataBase, query, 500, query,
+								BankingPay[Owner],
+								BankingPay[Balance],
+								BankingPay[LockIn],
+								BankingPay[LockOut],
+								PlayersData[playerid][CarteraI][carteraid]);
+							mysql_query(dataBase, query, false);
 
-							strcat(AccountBankData, TempSave, sizeof(AccountBankData));
-
+							format(query, 100, "UPDATE `%s` SET `Cheques`='", DIR_ACCOUNT_BANK);
 						    for ( new c = 0; c < MAX_COUNT_CHEQUES; c++ )
 						    {
-								format(TempSave, sizeof(TempSave), "%i³%i³%s³%i³",
+								new chequesData[60];
+								format(chequesData, sizeof(chequesData), "%i|%i|%s|%i|,",
 								ChequesPay[c][UniqueID],
 								ChequesPay[c][Type],
 								ChequesPay[c][NombreCh],
 								ChequesPay[c][Ammount]);
 
-								strcat(AccountBankData, TempSave, sizeof(AccountBankData));
+								strcat(query, chequesData, 1000);
 							}
-
-							new File:SaveAccountBankF;
-						    SaveAccountBankF = fopen(TempDir, io_write);
-							fwrite(SaveAccountBankF, AccountBankData);
-							fclose(SaveAccountBankF);
+							strcat(query, "' WHERE `AccountNumber`=%i;");
+							mysql_format(dataBase, query, 1000, query, PlayersData[playerid][CarteraI][carteraid]);
+							mysql_query(dataBase, query, false);
 							/////////////////////////
 
 							ShowPlayerDialogEx(playerid,32,DIALOG_STYLE_MSGBOX, "{00A5FF}Banco - Cheque Cobrado",StatsBank, "Aceptar", "Volver");
@@ -66266,6 +65818,7 @@ public PayCheckToPlayer(playerid, carteraid)
 		{
 			ShowPlayerDialogEx(playerid,32,DIALOG_STYLE_MSGBOX, "{00A5FF}Banco - Error","{F50000}El número de cuenta donde desea cobrar el cheque no existe!", "Aceptar", "Volver");
 		}
+		cache_delete(cacheid);
 	}
 }
 public TransferirMoney(playerid, account, amount)
@@ -66320,43 +65873,36 @@ public TransferirMoney(playerid, account, amount)
 	}
 	else
 	{
-		new TempDir[50];
-		format(TempDir, sizeof(TempDir), "%s%i.ulp", DIR_ACCOUNT_BANK, account);
-		if ( fexist(TempDir) )
+	    new query[1000], Cache:cacheid, bankAccountExist;
+		format(query, 200, "SELECT * FROM `%s` WHERE `AccountNumber`=%i", DIR_ACCOUNT_BANK, account);
+		cacheid = mysql_query(dataBase, query);
+		cache_get_row_count(bankAccountExist);
+		if ( bankAccountExist )
 		{
-			new AccountBankData[700];
-			new AccountBankSlots[MAX_ACCOUNT_BANK_SLOT][MAX_PLAYER_NAME];
-			new File:LoadAccountBankF;
 			new BankingPay[AccountBankEnum];
 			new ChequesPay[MAX_COUNT_CHEQUES][ChequesEnum];
-
-		    LoadAccountBankF = fopen(TempDir, io_read);
-			fread(LoadAccountBankF, AccountBankData);
-			fclose(LoadAccountBankF);
-
-			new PosSplitAfter = 0;
-			for ( new b = 0; b < MAX_ACCOUNT_BANK_SLOT; b++ )
-			{
-				PosSplitAfter = strfind(AccountBankData, "³", false);
-				strmid(AccountBankSlots[b], AccountBankData, 0, PosSplitAfter, sizeof(AccountBankData));
-				strdel(AccountBankData, 0, PosSplitAfter + 1);
-			}
-			format(BankingPay[Owner], MAX_PLAYER_NAME, "%s", AccountBankSlots[0]);
-			BankingPay[Balance]			= strval(AccountBankSlots[1]);
-			BankingPay[LockIn]			= strval(AccountBankSlots[2]);
-			BankingPay[LockOut]			= strval(AccountBankSlots[3]);
-
-            new ConteoCC = 4;
+			new ChequesPayData[700];
+			cache_get_value_name(0, "Client", BankingPay[Owner], MAX_PLAYER_NAME);
+			cache_get_value_name_int(0, "Balance", BankingPay[Balance]);
+			cache_get_value_name_int(0, "LockIn", BankingPay[LockIn]);
+			cache_get_value_name_int(0, "LockOut", BankingPay[LockOut]);
+			cache_get_value_name(0, "Cheques", ChequesPayData, 700);
 		    for ( new c = 0; c < MAX_COUNT_CHEQUES; c++ )
 		    {
-				ChequesPay[c][UniqueID]      = strval(AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-				ChequesPay[c][Type]      = strval(AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-				format(ChequesPay[c][NombreCh], MAX_PLAYER_NAME, "%s", AccountBankSlots[ConteoCC]);
-				ConteoCC++;
-				ChequesPay[c][Ammount]      = strval(AccountBankSlots[ConteoCC]);
-				ConteoCC++;
+				new ChequePayDataSlot[4][50], SplitPos[2];
+				SplitPos[1] = strfind(ChequesPayData, ",", false);
+				for ( new i = 0; i != 4; i++ )
+				{
+					SplitPos[0] = strfind(ChequesPayData, "|", false);
+					strmid(ChequePayDataSlot[i], ChequesPayData, 0, SplitPos[0]);
+					strdel(ChequesPayData, 0, SplitPos[0]+1);
+				}
+				strdel(ChequesPayData, 0, SplitPos[1]+1);
+
+				ChequesPay[c][UniqueID] = strval(ChequePayDataSlot[0]);
+				ChequesPay[c][Type]     = strval(ChequePayDataSlot[1]);
+				format(ChequesPay[c][NombreCh], MAX_PLAYER_NAME, "%s", ChequePayDataSlot[2]);
+				ChequesPay[c][Ammount]  = strval(ChequePayDataSlot[3]);
 			}
 		    ////////////////////////////
 			if ( BankingPay[LockIn] )
@@ -66373,30 +65919,32 @@ public TransferirMoney(playerid, account, amount)
 				    BankingPay[Balance] 				+= amount;
 					ShowPlayerDialogEx(playerid,32,DIALOG_STYLE_MSGBOX, "{00A5FF}Banco - Transferencia Realizada",StatsBank, "Aceptar", "Volver");
 					/////////////////////////
-					new TempSave[60];
-					format(TempSave, sizeof(TempSave), "%s³%i³%i³%i³",
-					BankingPay[Owner],
-					BankingPay[Balance],
-					BankingPay[LockIn],
-					BankingPay[LockOut]);
+					format(query, 500, "UPDATE `%s` SET ", DIR_ACCOUNT_BANK);
+					strcat(query, "`Client`='%e',`Balance`='%i',`LockIn`='%i',`LockOut`='%i'");
+					strcat(query, " WHERE `AccountNumber`=%i;");
+					mysql_format(dataBase, query, 500, query,
+						BankingPay[Owner],
+						BankingPay[Balance],
+						BankingPay[LockIn],
+						BankingPay[LockOut],
+						account);
+					mysql_query(dataBase, query, false);
 
-					strcat(AccountBankData, TempSave, sizeof(AccountBankData));
-
-				    for ( new c = 0; c < MAX_COUNT_CHEQUES; c++ )
+					format(query, 100, "UPDATE `%s` SET `Cheques`='", DIR_ACCOUNT_BANK);
+				    for ( new chequeid = 0; chequeid < MAX_COUNT_CHEQUES; chequeid++ )
 				    {
-						format(TempSave, sizeof(TempSave), "%i³%i³%s³%i³",
-						ChequesPay[c][UniqueID],
-						ChequesPay[c][Type],
-						ChequesPay[c][NombreCh],
-						ChequesPay[c][Ammount]);
+						new chequesData[60];
+						format(chequesData, sizeof(chequesData), "%i|%i|%s|%i|,",
+						ChequesPay[chequeid][UniqueID],
+						ChequesPay[chequeid][Type],
+						ChequesPay[chequeid][NombreCh],
+						ChequesPay[chequeid][Ammount]);
 
-						strcat(AccountBankData, TempSave, sizeof(AccountBankData));
+						strcat(query, chequesData, 1000);
 					}
-
-					new File:SaveAccountBankF;
-				    SaveAccountBankF = fopen(TempDir, io_write);
-					fwrite(SaveAccountBankF, AccountBankData);
-					fclose(SaveAccountBankF);
+					strcat(query, "' WHERE `AccountNumber`=%i;");
+					mysql_format(dataBase, query, 1000, query, account);
+					mysql_query(dataBase, query, false);
 					/////////////////////////
 			    }
 			    else
@@ -66413,6 +65961,7 @@ public TransferirMoney(playerid, account, amount)
 		{
 			ShowPlayerDialogEx(playerid,32,DIALOG_STYLE_MSGBOX, "{00A5FF}Banco - Error","{F50000}El número de cuenta a donde desea transferir dinero no existe!", "Aceptar", "Volver");
 		}
+		cache_delete(cacheid);
 	}
 }
 public ShowBankConfiguration(playerid)
@@ -66829,7 +66378,7 @@ public SetCameraPresentRace(playerid, raceid, point, Float:Porcent, Float:Camera
 public LoadLastOptionsServer()
 {
 	// DDoS Protection.
-    SERVER_PORT = GetServerVarAsInt("port");
+    SERVER_PORT_ = GetServerVarAsInt("port");
     
 	SetTimer("CheckVehicleGas", TIME_CHECK_GAS_VEHICLES, false);
 
@@ -66915,20 +66464,6 @@ public LoadLastOptionsServer()
 	SetTimerGlobal();
 	CheckPlayersAFK();
 }
-public SaveEmail(playerid)
-{
-	new DirBD[50];
-    new DataEmail[80];
-	format(DirBD, sizeof(DirBD), "%s%s.ulp", DIR_EMAILS, PlayersDataOnline[playerid][NameOnline]);
-
- 	format(DataEmail, sizeof(DataEmail), "%s³%i",
-	    PlayersData[playerid][Email],
-	    PlayersData[playerid][EmailTime]);
-
-	new File:SaveEmailF = fopen(DirBD, io_write);
-	fwrite(SaveEmailF, DataEmail);
-	fclose(SaveEmailF);
-}
 public ShowPlayerVerifiquedEmail(playerid, option)
 {
     if ( option )
@@ -66955,7 +66490,7 @@ public ShowPlayerLogin(playerid, option)
    	else
    	{
 		PlayersDataOnline[playerid][SaveAfterAgenda][0] = true;
-        ShowPlayerDialogEx(playerid, 1, DIALOG_STYLE_PASSWORD, MsgWelcome, "{F0F0F0}Intente nuevamente ingresar su contraseña y pulse en \"Ingresar\"\n\n{F50000}NOTA: {F0F0F0}Si ha olvidado su contraseña puede solicitarla mediante un E-mail pulsando en \"Recuperar\"\n{F0F0F0}o tratando directamente en el centro de soporte (wwww.FonixGame.foroactivo.com/Soporte)", "Ingresar", "Recuperar");
+        ShowPlayerDialogEx(playerid, 1, DIALOG_STYLE_PASSWORD, MsgWelcome, "{F0F0F0}Intente nuevamente ingresar su contraseña y pulse en \"Ingresar\"\n\n{F50000}NOTA: {F0F0F0}Si ha olvidado su contraseña puede solicitarla mediante un E-mail pulsando en \"Recuperar\"\n{F0F0F0}o tratando directamente en el centro de soporte ("WEBPAGE"/Soporte)", "Ingresar", "Recuperar");
 	}
 }
 public ShowPlayerRegister(playerid, option)
@@ -66974,8 +66509,9 @@ public ShowPlayerRegister(playerid, option)
 }
 public SendRequestPasswordRecovery(playerid)
 {
+	/*
 	new StrRequestHTTP[400];
-	format(StrRequestHTTP, sizeof(StrRequestHTTP), "server.FonixGame.foroactivo.com/recuperar_password_samp.php?passwordPass=%s&passwordUser=%s&EmailSend=%s&UserName=%s",
+	format(StrRequestHTTP, sizeof(StrRequestHTTP), ""WEBPAGE"/recuperar_password_samp.php?passwordPass=%s&passwordUser=%s&EmailSend=%s&UserName=%s",
 			PASSWORD_EMAIL,
 			PlayersData[playerid][Password],
 			PlayersData[playerid][Email],
@@ -66984,6 +66520,7 @@ public SendRequestPasswordRecovery(playerid)
 	printf("%s", StrRequestHTTP);
 
 	HTTP(playerid, HTTP_POST, StrRequestHTTP, "", "RecoveryEmailPlayer");
+	*/
 }
 public RecoveryEmailPlayer(playerid, response_code, data[])
 {
@@ -66994,15 +66531,14 @@ public RecoveryEmailPlayer(playerid, response_code, data[])
 		{
 		    new MsgEmailSend[400];
 		    format(MsgEmailSend, sizeof(MsgEmailSend), "{F0F0F0}El proceso se ha realizado con éxito!\n\nSe ha enviado un E-mail con su contraseña actual a la siguiente dirección:\n{F5FF00}%s\n\n{F0F0F0}Revise la bandeja de Spam si no encuentra el E-mail.", PlayersData[playerid][Email]);
-		    strcat(MsgEmailSend, "\n\n{F0F0F0}Cualquier duda no olvide dirígirse al centro de soporte en:\n{F5FF00}www.FonizGame.foroactivo.com/Soporte\n\n\n\n{00A5FF}Saludos Cordiales\n{00A5FF}Equipo de Fonix Game.", sizeof(MsgEmailSend));
+		    strcat(MsgEmailSend, "\n\n{F0F0F0}Cualquier duda no olvide dirígirse al centro de soporte en:\n{F5FF00}"WEBPAGE"/Soporte\n\n\n\n{00A5FF}Saludos Cordiales\n{00A5FF}Equipo de Un Player.", sizeof(MsgEmailSend));
 	        ShowPlayerDialogEx(playerid, 999, DIALOG_STYLE_MSGBOX, "{00A5FF}Información - Recuperación de contraseña", MsgEmailSend, "Ok", "");
 
 	        PlayersData[playerid][EmailTime] = gettime() + 7200;
-			SaveEmail(playerid);
 		}
 		else
 		{
-	        ShowPlayerDialogEx(playerid, 999, DIALOG_STYLE_MSGBOX, "{00A5FF}Información - Error! (Recuperación de contraseña)", "{F50000}Oops, un error ha ocurrído!\n\n{F0F0F0}Porfavor intenté luego realizar está operación\n{F0F0F0}Si el problema llega a persistir, nos puede contar el inconveniente en: {F5FF00}www.FonixGame.foroactivo.com/Soporte\n\n\n{F0F0F0}Disculpar las molestías.", "Ok", "");
+	        ShowPlayerDialogEx(playerid, 999, DIALOG_STYLE_MSGBOX, "{00A5FF}Información - Error! (Recuperación de contraseña)", "{F50000}Oops, un error ha ocurrído!\n\n{F0F0F0}Porfavor intenté luego realizar está operación\n{F0F0F0}Si el problema llega a persistir, nos puede contar el inconveniente en: {F5FF00}"WEBPAGE"/Soporte\n\n\n{F0F0F0}Disculpar las molestías.", "Ok", "");
 		}
         KickEx(playerid, 9);
 	}
@@ -67014,13 +66550,22 @@ public ShowPlayerDialogEx(playerid, dialogid, style, caption[], info[], button1[
 }
 public IsValidEmail(playerid, email[])
 {
+   /*
 	new StrRequestHTTP[400];
-	format(StrRequestHTTP, sizeof(StrRequestHTTP), "www.FonixGame.foroactivo.com/IsValidEmail.php?email=%s",
+	format(StrRequestHTTP, sizeof(StrRequestHTTP), ""WEBPAGE"/IsValidEmail.php?email=%s",
 			email);
 
 	printf("%s", StrRequestHTTP);
 
 	HTTP(playerid, HTTP_POST, StrRequestHTTP, "", "ValidingEmail");
+	*/
+	printf("IsValidEmail: %s", email);
+	if (strfind(email, "@", true) != -1 && strlen(email) >= 14 )
+	{
+	    CallLocalFunction("ValidingEmail", "iis", playerid, 200, email);
+	}
+	else CallLocalFunction("ValidingEmail", "iis", playerid, HTTP_ERROR_MALFORMED_RESPONSE, " ");
+	return 1;
 }
 public ValidingEmail(playerid, response_code, data[])
 {
@@ -70650,36 +70195,25 @@ public BuyPhone24_7(playerid)
 }
 public CheckNumberAvalible(number)
 {
-    new numberstr[40];
-    format(numberstr, sizeof(numberstr), "%s%i.ulp", DIR_MOVILES, number);
-	if ( !fexist(numberstr) )
+    new query[200], Cache:cacheid, numberExist;
+	format(query, 200, "SELECT `Phone` FROM `%s` WHERE `Phone`='%i';", DIR_USERS, number);
+	cacheid = mysql_query(dataBase, query);
+	cache_get_row_count(numberExist);
+	cache_delete(cacheid);
+	if ( !numberExist )
 	{
 		return true;
 	}
-	else
-	{
-	    new DatosLeidosP[30];
-		new File:fLeerP = fopen(numberstr, io_read);
-	    fread(fLeerP, DatosLeidosP);
-	    fclose(fLeerP);
-
-		if ( strlen(DatosLeidosP) <= 2 )
-		{
-			return true;
-		}
-	}
-	return false;
+	else return false;
 }
 public BuyPhoneNow(playerid, number)
 {
     if ( CheckNumberAvalible(number) )
     {
-	    new numberstr[40];
-	    format(numberstr, sizeof(numberstr), "%s%i.ulp", DIR_MOVILES, number);
-	    new File:fEscribir3 = fopen(numberstr, io_write);
-		fwrite(fEscribir3, PlayersDataOnline[playerid][NameOnline]);
-		fclose(fEscribir3);
+		new query[200];
 		PlayersData[playerid][Phone] = number;
+        mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Phone`='%i' WHERE `Nombre`='%e';", DIR_USERS, PlayersData[playerid][Phone], PlayersDataOnline[playerid][NameOnline]);
+		mysql_query(dataBase, query, false);
 		return true;
 	}
 	else
@@ -70702,25 +70236,6 @@ public ShowDudasDialog(playerid)
 {
 	ShowPlayerDialogEx(playerid,136,DIALOG_STYLE_INPUT,"{00A5FF}Envíanos tu duda", "{F0F0F0}Recuerde que puede consultar cualquier comando en {00F50A}/Ayuda", "Enviar", "Salir");
 }
-/*stock gettimeEx( &hora, &minutos = 0, &segundos = 0)
-{
-    gettime(hora, minutos, segundos);
-    hora += TIME_ZONE;
-    if ( hora > 23 )
-    {
-        hora -= 23;
-    }
-}*/
-/*public getdate(&ano, &mes, &dia)
-{
-	getdate(ano, mes, dia);
-	new hora;
-	gettime(hora);
-	if ( hora <= TIME_ZONE  )
-	{
-	    dia++;
-	}
-}*/
 public LoadRobosInfo()
 {
 	// Cotls
@@ -71713,7 +71228,7 @@ public CheckFilesDDoS()
 		new File:CheckConnections = fopen(DIR_DDOS, io_read);
 		new stringSearch[10];
 		new PosFind;
-		format(stringSearch, sizeof(stringSearch), ":%i", SERVER_PORT);
+		format(stringSearch, sizeof(stringSearch), ":%i", SERVER_PORT_);
 		while ( fread(CheckConnections, DataSaveRead) )
 		{
 		    PosFind = strfind(DataSaveRead, stringSearch, false, 0);
