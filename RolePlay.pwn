@@ -33592,7 +33592,7 @@ public LoadDataVehicle(vehicleid, dir[], type)
 		{
 			cache_get_value_name_int(0, "Time", DataCars[vehicleid][Time]);
 			cache_get_value_name_int(0, "Matricula", DataCars[vehicleid][Matricula]);
-			format(DataCars[vehicleid][MatriculaString], 32, "%s", DataCars[vehicleid][Matricula]);
+			format(DataCars[vehicleid][MatriculaString], 32, "%i", DataCars[vehicleid][Matricula]);
 		}
 		cache_get_value_name_int(0, "LockPolice", DataCars[vehicleid][LockPolice]);
 		cache_get_value_name(0, "ReasonLock", DataCars[vehicleid][ReasonLock], 50);
