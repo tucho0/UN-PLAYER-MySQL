@@ -16261,7 +16261,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
 							        	new query[200];
 							        	mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Phone`='%i' WHERE `Nombre`='%e';", DIR_USERS, PlayersData[strval(cmdtext[11])][Phone], PlayersDataOnline[strval(cmdtext[11])][NameOnline]);
 							        	mysql_query(dataBase, query, false);
-							        	mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Phone`='0' WHERE `Nombre`='%e';", DIR_USERS, PlayersData[playerid][Phone], PlayersDataOnline[playerid][NameOnline]);
+							        	mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Phone`='0' WHERE `Nombre`='%e';", DIR_USERS, PlayersDataOnline[playerid][NameOnline]);
 							        	mysql_query(dataBase, query, false);
 									}
 							        else
@@ -20590,7 +20590,7 @@ public OnPlayerCommandText(playerid, cmdtext[])
 						        SendInfoMessage(playerid, 2, "0", "Has botado su móvil, ahora no podrá realizar llamadas");
 						        
 						        new query[200];
-						        mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Phone`='0' WHERE `Nombre`='%e';", DIR_USERS, PlayersData[playerid][Phone], PlayersDataOnline[playerid][NameOnline]);
+						        mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Phone`='0' WHERE `Nombre`='%e';", DIR_USERS, PlayersDataOnline[playerid][NameOnline]);
 							    mysql_query(dataBase, query, false);
 							}
 							else
@@ -31134,7 +31134,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		        SetPlayerVirtualWorldEx(playerid, 0);
 				UpdateSpawnPlayer(playerid);
 				SpawnPlayerEx(playerid);
-				SendInfoMessage(playerid, 2, "0", "Servidor: Has sido spawneado correctamente. Cualquier duda frente al gamemode, no dudes en usar /duda.");
+				SendInfoMessage(playerid, 2, "0", "Has sido spawneado correctamente. Cualquier duda frente al gamemode, no dudes en usar /duda.");
 		    }
 		}
 	}
