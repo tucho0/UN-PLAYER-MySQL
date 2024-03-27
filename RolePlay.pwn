@@ -29199,7 +29199,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				if ( strlen(inputtext) <= 60)
 				{
 				    IsValidEmail(playerid, inputtext);
-					ShowPlayerDialogEx(playerid, 93, DIALOG_STYLE_MSGBOX, "{00A5FF}Validando E-mail...", "{F0F0F0}Porfavor espere mientras se valida su E-mail...", "Espere...", "");
+					//ShowPlayerDialogEx(playerid, 93, DIALOG_STYLE_MSGBOX, "{00A5FF}Validando E-mail...", "{F0F0F0}Porfavor espere mientras se valida su E-mail...", "Espere...", "");
 				}
 				else
 				{
@@ -66562,7 +66562,17 @@ public IsValidEmail(playerid, email[])
 	printf("IsValidEmail: %s", email);
 	if (strfind(email, "@", true) != -1 && strlen(email) >= 14 )
 	{
-	    CallLocalFunction("ValidingEmail", "iis", playerid, 200, email);
+		new query[200], Cache:cacheid, emailInUse;
+		mysql_format(dataBase, query, 200, "SELECT `Email` FROM `%s` WHERE `Email`='%e';", DIR_USERS, email);
+		mysql_query(dataBase, query);
+		cache_get_row_count(emailInUse);
+		cache_delete(cacheid);
+		if (emailInUse)
+		{
+		    SendInfoMessage(playerid, 0, "1606", "E-mail en uso.");
+		    ShowPlayerEmailChange(playerid, true);
+		}
+		else CallLocalFunction("ValidingEmail", "iis", playerid, 200, email);
 	}
 	else CallLocalFunction("ValidingEmail", "iis", playerid, HTTP_ERROR_MALFORMED_RESPONSE, " ");
 	return 1;
@@ -66576,7 +66586,11 @@ public ValidingEmail(playerid, response_code, data[])
 		{
 		    if ( strlen(data) > 1 )
 		    {
+		        new query[200];
+		        
 				format(PlayersData[playerid][Email], 60, "%s", data);
+				mysql_format(dataBase, query, 200, "UPDATE `%s` SET `Email`='%e' WHERE `Nombre`='%e';", DIR_USERS, data, PlayersDataOnline[playerid][NameOnline]);
+				mysql_query(dataBase, query, false);
 
 			    new MsgNewEmail[MAX_TEXT_CHAT];
 			    format(MsgNewEmail, sizeof(MsgNewEmail), "Ha cambiado su E-mail satisfactoriamente. Su nuevo E-mail es: %s", data);
@@ -66605,7 +66619,6 @@ public ShowPlayerEmailChange(playerid, option)
    	{
 		ShowPlayerDialogEx(playerid, 90, DIALOG_STYLE_INPUT, "{00A5FF}Nuevo E-mail", "{F0F0F0}El E-mail introducido ni es válido, porfavor, revise el mismo.", "Cambiar", "Volver");
 	}
-
 }
 public IsValidStringServer(playerid, string[])
 {
