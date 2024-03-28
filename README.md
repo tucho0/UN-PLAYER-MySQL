@@ -15,10 +15,10 @@ Descargar el gamemode UN Player Roleplay MySQL o actualiza tu gamemode UP a MySQ
 
 ## Descarga
 
-- Para descargar el gamemode completo (Gamemode + Base de Datos ) [Click Aquí](https://github.com/tucho0/UN-PLAYER-MySQL/releases/download/v1.1/UN.Player.zip).
-- Para descargar solo el gamemode [Click Aquí](https://github.com/tucho0/UN-PLAYER-MySQL/releases/download/v1.1/RolePlay.pwn).
-- Para descargar solo la base de datos [Click Aquí](https://github.com/tucho0/UN-PLAYER-MySQL/releases/download/v1.1/updatabase.sql).
-- Para descargar solo la base de datos [Click Aquí](https://github.com/tucho0/UN-PLAYER-MySQL/releases/download/v1.1/updatabase-limpia.sql). (Sin casas y negocios).
+- Para descargar el servidor completo (Gamemode + Base de Datos ) [UN.Player.zip](https://github.com/tucho0/UN-PLAYER-MySQL/releases/download/v1.1/UN.Player.zip).
+- Para descargar solo el gamemode [RolePlay.pwn](https://github.com/tucho0/UN-PLAYER-MySQL/releases/download/v1.1/RolePlay.pwn).
+- Para descargar solo la base de datos [updatabase.sql](https://github.com/tucho0/UN-PLAYER-MySQL/releases/download/v1.1/updatabase.sql).
+- Para descargar solo la base de datos [updatabase-limpia.sql](https://github.com/tucho0/UN-PLAYER-MySQL/releases/download/v1.1/updatabase-limpia.sql). (Sin casas y negocios).
 
 ## Actualizacion
 
