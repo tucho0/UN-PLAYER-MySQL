@@ -24,9 +24,13 @@ Descargar el gamemode UN Player Roleplay MySQL o actualiza tu gamemode UP a MySQ
 
 Si usted cuenta con el mismo gamemode y desea actualizarlo a MySQL [aquí](https://github.com/tucho0/UN-PLAYER-MySQL/compare/ae5be77..9e5ce1b) encontrara la documentación de que debe añadir/modificar para actualizar su codigo.
 
-<br>
+> [!WARNING]
+> Se recomienda hacer limpieza de TextDraws como los de Enfermedad y Cansancio ya que se supera el [Limite de TextDraws Gloables](https://www.open.mp/docs/scripting/resources/limits) (2048).
+> <br>
+> Puede llegar a experimentar falta TextDraws debido a una saturacion de los mismos.
 
-Notas de cambios: [#/releases notes/v1.1](https://github.com/tucho0/UN-PLAYER-MySQL/blob/main/releases%20notes/v1.1.md).
+> [!IMPORTANT]
+> Notas de cambios: [#/releases notes/v1.1](https://github.com/tucho0/UN-PLAYER-MySQL/blob/main/releases%20notes/v1.1.md).
 
 > [!TIP]
 > Para configurar la base de datos solo es necesario abrir el archivo "mysql.ini" e ingresar los datos.
